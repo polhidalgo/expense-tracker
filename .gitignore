@@ -1,0 +1,18 @@
+# .NET
+**/bin/
+**/obj/
+.vs/
+
+# Node
+**/node_modules/
+**/dist/
+
+# Secrets
+.env
+.env.*
+!.env.example
+**/appsettings.Development.json
+
+# IDE
+.vscode/
+.idea/
