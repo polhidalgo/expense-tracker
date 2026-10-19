@@ -1,11 +1,15 @@
-
+using ExpenseTracker.Api;
+using ExpenseTracker.Api.ErrorHandling;
+using ExpenseTracker.Application.Interfaces;
 using ExpenseTracker.Infrastructure.Persistence;
+using ExpenseTracker.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddOpenApi();
 
 var allowedOrigins = builder.Configuration
@@ -30,6 +34,16 @@ var connectionString = builder.Configuration
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+
+// Synthetic local user, Development only (D-01). No ICurrentUser is registered
+// in any other environment until real authentication exists (FR-AUTH-001).
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<ICurrentUser, LocalCurrentUser>();
+}
 
 var app = builder.Build();
 

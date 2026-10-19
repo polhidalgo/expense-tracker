@@ -9,3 +9,55 @@ GET {{ExpenseTracker.Api_HostAddress}}/api/health/database
 Accept: application/json
 
 ###
+
+GET {{ExpenseTracker.Api_HostAddress}}/api/categories
+Accept: application/json
+
+###
+
+POST {{ExpenseTracker.Api_HostAddress}}/api/expenses
+Content-Type: application/json
+Accept: application/json
+
+{
+  "amount": 42.50,
+  "currency": "AUD",
+  "expenseDate": "2026-10-18",
+  "categoryId": "00000000-0000-0000-0000-000000000101",
+  "merchant": "Woolworths",
+  "description": "Weekly groceries"
+}
+
+###
+
+# Replace the id with one returned by the POST above.
+GET {{ExpenseTracker.Api_HostAddress}}/api/expenses/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+###
+
+GET {{ExpenseTracker.Api_HostAddress}}/api/expenses?startDate=2026-10-01&endDate=2026-10-31&categoryId=00000000-0000-0000-0000-000000000101&page=1&pageSize=20
+Accept: application/json
+
+###
+
+# Replace the id with one returned by the POST above.
+PUT {{ExpenseTracker.Api_HostAddress}}/api/expenses/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+Accept: application/json
+
+{
+  "amount": 55.00,
+  "currency": "AUD",
+  "expenseDate": "2026-10-19",
+  "categoryId": "00000000-0000-0000-0000-000000000102",
+  "merchant": "Cafe",
+  "description": "Lunch"
+}
+
+###
+
+# Replace the id with one returned by the POST above.
+DELETE {{ExpenseTracker.Api_HostAddress}}/api/expenses/00000000-0000-0000-0000-000000000000
+
+###
