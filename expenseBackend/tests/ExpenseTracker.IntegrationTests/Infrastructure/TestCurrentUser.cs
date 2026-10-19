@@ -3,10 +3,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace ExpenseTracker.IntegrationTests.Infrastructure;
 
-/// <summary>
-/// Test-only identity: the caller is whichever user the request's
-/// <see cref="HeaderName"/> header names. Never registered outside tests.
-/// </summary>
+// In tests, the user comes from the X-Test-User request header.
 public sealed class TestCurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUser
 {
     public const string HeaderName = "X-Test-User";

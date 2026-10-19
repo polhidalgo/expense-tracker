@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- Holds ConnectionStrings:TestDatabase; separate from the Api's development secrets. -->
+    <!-- User secrets for ConnectionStrings:TestDatabase. -->
     <UserSecretsId>ae54879e-1304-4afa-91c4-368674e9db07</UserSecretsId>
   </PropertyGroup>
 

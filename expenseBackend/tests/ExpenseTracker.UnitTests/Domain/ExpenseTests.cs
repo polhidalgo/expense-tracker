@@ -28,7 +28,7 @@ public class ExpenseTests
         Assert.Equal([field], ex.Errors.Keys);
     }
 
-    //Valid input keeps its values and sets the owner/source/creation time.
+    // Valid input keeps its values and sets the owner/source/creation time.
     [Fact]
     public void Create_WithValidData_SavesValuesAndOwner()
     {
@@ -59,7 +59,7 @@ public class ExpenseTests
         Assert.Equal(0.01m, NewExpense(amount: 0.01m).Amount);
     }
 
-    // More than two decimals is rejected
+    // More than two decimals is rejected, never rounded.
     [Fact]
     public void Create_WithThreeDecimals_IsRejected()
     {
@@ -101,7 +101,7 @@ public class ExpenseTests
         Assert.Equal("Bread and milk", expense.Description);
     }
 
-    // Limit description and merchant
+    // Merchant max 150 and description max 500 characters.
     [Fact]
     public void Create_WithTextAtMaxLength_IsAccepted()
     {
@@ -122,7 +122,7 @@ public class ExpenseTests
         AssertRejected("description", () => NewExpense(description: new string('d', 501)));
     }
 
-    // DFuture dates are allowed.
+    // Future dates are allowed.
     [Fact]
     public void Create_WithFutureDate_IsAccepted()
     {
@@ -131,7 +131,7 @@ public class ExpenseTests
         Assert.Equal(nextYear, NewExpense(expenseDate: nextYear).ExpenseDate);
     }
 
-    // Every invalid field gets its own error
+    // Every invalid field gets its own error.
     [Fact]
     public void Create_WithSeveralInvalidFields_ReportsEachOne()
     {

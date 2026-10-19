@@ -7,11 +7,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ExpenseTracker.IntegrationTests.Infrastructure;
 
-/// <summary>
-/// Hosts the real API in memory, pointed at the test database.
-/// The "Testing" environment means the Api's development user secrets
-/// (and its development connection string) are never loaded.
-/// </summary>
+// Runs the real API in memory against the test database.
+// The "Testing" environment means the development secrets are never loaded.
 public sealed class ApiFactory(string testConnectionString) : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -27,7 +24,6 @@ public sealed class ApiFactory(string testConnectionString) : WebApplicationFact
         });
     }
 
-    /// <summary>Creates a client whose requests are made as <paramref name="userId"/>.</summary>
     public HttpClient CreateClientFor(Guid userId)
     {
         var client = CreateClient();

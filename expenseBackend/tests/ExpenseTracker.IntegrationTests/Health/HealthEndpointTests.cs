@@ -7,7 +7,7 @@ namespace ExpenseTracker.IntegrationTests.Health;
 [Collection(DatabaseCollection.Name)]
 public sealed class HealthEndpointTests(TestDatabaseFixture database) : IntegrationTestBase(database)
 {
-    // Phase 1 exit criterion: the API can connect to the isolated test database.
+    // The API can connect to the test database.
     [Fact]
     public async Task Health_Database_ReturnsConnected_AgainstTestDatabase()
     {

@@ -1,8 +1,5 @@
 namespace ExpenseTracker.Domain.Rules;
 
-/// <summary>
-/// Limits for expense fields (FR-EXP-001, D-02, D-03).
-/// </summary>
 public static class ExpenseRules
 {
     // Largest value that fits PostgreSQL numeric(18,2).

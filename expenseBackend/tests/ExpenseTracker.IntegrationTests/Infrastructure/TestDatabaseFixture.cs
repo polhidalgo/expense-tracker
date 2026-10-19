@@ -6,19 +6,17 @@ using Npgsql;
 
 namespace ExpenseTracker.IntegrationTests.Infrastructure;
 
-/// <summary>
-/// Shared once per test run: verifies the target is the dedicated test
-/// database, applies migrations and exposes the API factory.
-/// </summary>
 public sealed class TestDatabaseFixture : IAsyncLifetime
 {
     // Must match <UserSecretsId> in the test project file.
     private const string UserSecretsId = "ae54879e-1304-4afa-91c4-368674e9db07";
 
-    // Created once by hand in the test database only (see README).
-    // Its absence means "this is not the test database": nothing is migrated or truncated.
+    // Created by hand in the test database only. Without it the tests refuse to run.
     private const string MarkerTable = "__integration_test_marker";
     private const string MigrationsHistoryTable = "__EFMigrationsHistory";
+
+    // The categories are not deleted between tests.
+    private const string CategoriesTable = "Categories";
 
     private string _connectionString = string.Empty;
 
@@ -40,10 +38,7 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
         await db.Database.MigrateAsync();
     }
 
-    /// <summary>
-    /// Empties every application table so each test starts from a known state.
-    /// The migrations history and the marker table are preserved.
-    /// </summary>
+    // Empties the tables before each test (except the ones above).
     public async Task ResetAsync()
     {
         const string sql = $"""
@@ -54,7 +49,7 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
                 INTO tables
                 FROM pg_tables
                 WHERE schemaname = 'public'
-                  AND tablename NOT IN ('{MigrationsHistoryTable}', '{MarkerTable}');
+                  AND tablename NOT IN ('{MigrationsHistoryTable}', '{MarkerTable}', '{CategoriesTable}');
 
                 IF tables IS NOT NULL THEN
                     EXECUTE 'TRUNCATE TABLE ' || tables || ' RESTART IDENTITY CASCADE';
@@ -91,7 +86,7 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
                 "Integration test database is not configured. Set 'ConnectionStrings:TestDatabase' with " +
                 "'dotnet user-secrets set \"ConnectionStrings:TestDatabase\" \"<connection string>\" " +
                 "--project tests/ExpenseTracker.IntegrationTests' or the environment variable " +
-                "'ConnectionStrings__TestDatabase'. See README.md, section 'Integration tests'.");
+                "'ConnectionStrings__TestDatabase'.");
         }
 
         return connectionString;
@@ -113,11 +108,11 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
                 $"Refusing to run integration tests: table 'public.{MarkerTable}' was not found in " +
                 $"database '{connection.Database}' on host '{connection.Host}'. Integration tests truncate " +
                 "every table, so they only run against a database explicitly marked as the test database. " +
-                "If this IS the dedicated test database, create the marker once (see README.md).");
+                $"If this IS the dedicated test database, run once in its SQL editor: CREATE TABLE public.{MarkerTable} ();");
         }
     }
 
-    // Guards against the API silently picking up another connection string.
+    // Makes sure the API is really using the test database.
     private void EnsureApiUsesTestDatabase(AppDbContext db)
     {
         var expected = new NpgsqlConnectionStringBuilder(_connectionString);

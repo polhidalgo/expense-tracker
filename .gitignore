@@ -18,3 +18,5 @@
 .idea/
 
 docs/
+# Visual Studio per-user settings
+*.user

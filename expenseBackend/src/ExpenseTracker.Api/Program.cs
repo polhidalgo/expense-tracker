@@ -33,8 +33,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// Unhandled exceptions and empty error responses are returned as
-// ProblemDetails without stack traces or internal details.
+// Errors are returned as ProblemDetails, without internal details.
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 

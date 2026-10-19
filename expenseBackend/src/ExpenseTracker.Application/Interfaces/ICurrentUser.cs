@@ -1,9 +1,6 @@
 namespace ExpenseTracker.Application.Interfaces;
 
-/// <summary>
-/// Identity of the caller. Record ownership is always derived from here,
-/// never from values submitted in a request.
-/// </summary>
+// The user making the request. Owners always come from here, never from the request body.
 public interface ICurrentUser
 {
     Guid UserId { get; }

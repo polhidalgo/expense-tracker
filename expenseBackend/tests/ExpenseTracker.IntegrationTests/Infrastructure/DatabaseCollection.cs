@@ -9,10 +9,7 @@ public sealed class DatabaseCollection : ICollectionFixture<TestDatabaseFixture>
     public const string Name = "Database";
 }
 
-/// <summary>
-/// Base for tests that touch the database: resets all tables before each test.
-/// Derived classes must also carry <c>[Collection(DatabaseCollection.Name)]</c>.
-/// </summary>
+// Base class for database tests: empties the tables before each test.
 public abstract class IntegrationTestBase(TestDatabaseFixture database) : IAsyncLifetime
 {
     protected ApiFactory Factory => database.Factory;
