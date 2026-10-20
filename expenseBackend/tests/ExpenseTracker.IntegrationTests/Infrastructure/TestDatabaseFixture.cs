@@ -20,6 +20,8 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
     private const string AppSecretsTable = "AppSecrets";
 
     private string _connectionString = string.Empty;
+    private string _encryptionKey = string.Empty;
+    private string _supabaseUrl = string.Empty;
 
     public ApiFactory Factory { get; private set; } = null!;
 
@@ -30,12 +32,13 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
             .AddEnvironmentVariables()
             .Build();
 
-        _connectionString = ReadConnectionString(configuration);
-        var encryptionKey = ReadEncryptionKey(configuration);
+        _connectionString = ReadSetting(configuration, "ConnectionStrings:TestDatabase", "<test connection string>");
+        _encryptionKey = ReadSetting(configuration, "Secrets:EncryptionKey", "<same base64 key used to save the Groq key>");
+        _supabaseUrl = ReadSetting(configuration, "Supabase:Url", "https://<test project>.supabase.co");
 
         await EnsureIsTestDatabaseAsync(_connectionString);
 
-        Factory = new ApiFactory(_connectionString, encryptionKey);
+        Factory = new ApiFactory(_connectionString, _encryptionKey, _supabaseUrl);
 
         using var scope = Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -78,36 +81,22 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
         }
     }
 
-    private static string ReadEncryptionKey(IConfiguration configuration)
-    {
-        var encryptionKey = configuration["Secrets:EncryptionKey"];
+    // An API that validates real Supabase tokens, used to test that bad tokens are rejected.
+    public ApiFactory CreateRealAuthenticationFactory() =>
+        new(_connectionString, _encryptionKey, _supabaseUrl, realAuthentication: true);
 
-        if (string.IsNullOrWhiteSpace(encryptionKey))
+    private static string ReadSetting(IConfiguration configuration, string name, string example)
+    {
+        var value = configuration[name];
+
+        if (string.IsNullOrWhiteSpace(value))
         {
             throw new InvalidOperationException(
-                "Encryption key is not configured. Set 'Secrets:EncryptionKey' with " +
-                "'dotnet user-secrets set \"Secrets:EncryptionKey\" \"<base64>\" " +
-                "--project tests/ExpenseTracker.IntegrationTests' or the environment variable " +
-                "'Secrets__EncryptionKey'. It must be the key used when the Groq key was saved in the test database.");
+                $"'{name}' is not configured. Set it with 'dotnet user-secrets set \"{name}\" \"{example}\" " +
+                $"--project tests/ExpenseTracker.IntegrationTests' or the environment variable '{name.Replace(":", "__")}'.");
         }
 
-        return encryptionKey;
-    }
-
-    private static string ReadConnectionString(IConfiguration configuration)
-    {
-        var connectionString = configuration.GetConnectionString("TestDatabase");
-
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException(
-                "Integration test database is not configured. Set 'ConnectionStrings:TestDatabase' with " +
-                "'dotnet user-secrets set \"ConnectionStrings:TestDatabase\" \"<connection string>\" " +
-                "--project tests/ExpenseTracker.IntegrationTests' or the environment variable " +
-                "'ConnectionStrings__TestDatabase'.");
-        }
-
-        return connectionString;
+        return value;
     }
 
     private static async Task EnsureIsTestDatabaseAsync(string connectionString)

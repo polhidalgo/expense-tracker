@@ -61,10 +61,6 @@ h1 {
   font-size: 0.875rem;
 }
 
-.status.error {
-  color: var(--error);
-}
-
 main {
   max-width: 1100px;
   margin: 0 auto;

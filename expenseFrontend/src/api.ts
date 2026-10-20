@@ -8,6 +8,7 @@ import type {
   PagedResult,
   ReceiptAnalysis,
 } from "./types";
+import { supabase } from "./supabase";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
 
@@ -22,14 +23,32 @@ export class ApiError extends Error {
   }
 }
 
+// The first field error if there is one, otherwise the general message.
+export function errorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    return Object.values(error.fieldErrors).flat()[0] ?? error.message;
+  }
+  return "Something went wrong.";
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const { data } = await supabase.auth.getSession();
+  const headers = new Headers(init?.headers);
+  if (data.session) headers.set("Authorization", `Bearer ${data.session.access_token}`);
+  // A file upload (FormData) sets its own Content-Type.
+  if (!(init?.body instanceof FormData)) headers.set("Content-Type", "application/json");
+
   let response: Response;
   try {
-    // A file upload (FormData) sets its own Content-Type.
-    const headers = init?.body instanceof FormData ? init.headers : { "Content-Type": "application/json", ...init?.headers };
     response = await fetch(`${API_URL}${path}`, { ...init, headers });
   } catch {
     throw new ApiError("Cannot reach the server.", 0);
+  }
+
+  // The session is no longer valid: signing out shows the login page again.
+  if (response.status === 401) {
+    await supabase.auth.signOut();
+    throw new ApiError("Your session has expired. Sign in again.", 401);
   }
 
   if (!response.ok) {
@@ -51,8 +70,6 @@ function toQueryString(query: ExpenseListQuery): string {
   }
   return params.size > 0 ? `?${params}` : "";
 }
-
-export const getHealth = () => request<{ status: string }>("/api/health");
 
 export const getCategories = () => request<Category[]>("/api/categories");
 

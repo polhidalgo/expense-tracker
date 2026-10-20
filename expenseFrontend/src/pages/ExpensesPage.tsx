@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError, createExpense, deleteExpense, getCategories, listExpenses, updateExpense } from "../api";
+import { createExpense, deleteExpense, errorMessage, getCategories, listExpenses, updateExpense } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ExpenseFilters, { type Filters } from "../components/ExpenseFilters";
 import ExpenseForm from "../components/ExpenseForm";
@@ -13,13 +13,6 @@ type Result = {
   data?: PagedResult<Expense>;
   error?: string;
 };
-
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return Object.values(error.fieldErrors).flat()[0] ?? error.message;
-  }
-  return "Something went wrong.";
-}
 
 function ExpensesPage() {
   const [categories, setCategories] = useState<Category[]>([]);

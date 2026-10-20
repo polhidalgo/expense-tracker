@@ -1,17 +1,15 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, analyzeReceipt, confirmReceipt, getCategories } from "../api";
+import { ApiError, analyzeReceipt, confirmReceipt, errorMessage, getCategories } from "../api";
 import ExpenseForm, { type ExpenseFormValues } from "../components/ExpenseForm";
 import type { Category, ReceiptAnalysis } from "../types";
 
 type AnalyzeError = { message: string; canRetry: boolean };
 
+// Retry only helps when Groq is busy (429) or unavailable (503).
 function errorFrom(error: unknown): AnalyzeError {
-  if (error instanceof ApiError) {
-    const message = Object.values(error.fieldErrors).flat()[0] ?? error.message;
-    return { message, canRetry: error.status === 429 || error.status === 503 };
-  }
-  return { message: "Something went wrong.", canRetry: false };
+  const canRetry = error instanceof ApiError && (error.status === 429 || error.status === 503);
+  return { message: errorMessage(error), canRetry };
 }
 
 // Empty AI values stay empty, so the user has to fill them in. Only the currency falls back to AUD,

@@ -1,5 +1,11 @@
 @ExpenseTracker.Api_HostAddress = http://localhost:5000
 
+# Every endpoint except health needs a Supabase access token.
+# Sign in to the app, then in the browser console run:
+#   (await (await import('/src/supabase.ts')).supabase.auth.getSession()).data.session.access_token
+# and paste it here. It expires after about an hour.
+@token = <paste access token>
+
 GET {{ExpenseTracker.Api_HostAddress}}/api/health
 Accept: application/json
 
@@ -11,11 +17,13 @@ Accept: application/json
 ###
 
 GET {{ExpenseTracker.Api_HostAddress}}/api/categories
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###
 
 POST {{ExpenseTracker.Api_HostAddress}}/api/expenses
+Authorization: Bearer {{token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -32,17 +40,20 @@ Accept: application/json
 
 # Replace the id with one returned by the POST above.
 GET {{ExpenseTracker.Api_HostAddress}}/api/expenses/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###
 
 GET {{ExpenseTracker.Api_HostAddress}}/api/expenses?startDate=2026-10-01&endDate=2026-10-31&categoryId=00000000-0000-0000-0000-000000000101&page=1&pageSize=20
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###
 
 # Replace the id with one returned by the POST above.
 PUT {{ExpenseTracker.Api_HostAddress}}/api/expenses/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -59,5 +70,12 @@ Accept: application/json
 
 # Replace the id with one returned by the POST above.
 DELETE {{ExpenseTracker.Api_HostAddress}}/api/expenses/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+###
+
+GET {{ExpenseTracker.Api_HostAddress}}/api/dashboard/summary?startDate=2026-10-01&endDate=2026-10-31
+Authorization: Bearer {{token}}
+Accept: application/json
 
 ###

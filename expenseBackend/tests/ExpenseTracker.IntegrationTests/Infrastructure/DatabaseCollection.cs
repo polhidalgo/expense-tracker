@@ -12,6 +12,8 @@ public sealed class DatabaseCollection : ICollectionFixture<TestDatabaseFixture>
 // Base class for database tests: empties the tables before each test.
 public abstract class IntegrationTestBase(TestDatabaseFixture database) : IAsyncLifetime
 {
+    protected TestDatabaseFixture Database => database;
+
     protected ApiFactory Factory => database.Factory;
 
     public Task InitializeAsync() => database.ResetAsync();

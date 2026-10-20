@@ -5,6 +5,8 @@ using ExpenseTracker.Infrastructure.AI;
 using ExpenseTracker.Infrastructure.Persistence;
 using ExpenseTracker.Infrastructure.Security;
 using ExpenseTracker.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,12 +62,26 @@ builder.Services.AddHttpClient<GroqReceiptExtractor>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// Local user for Development only. No ICurrentUser is registered elsewhere
-// until real authentication exists.
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddScoped<ICurrentUser, LocalCurrentUser>();
-}
+// Supabase Auth signs the access tokens; the public keys come from the project's discovery document.
+var supabaseUrl = builder.Configuration["Supabase:Url"]
+    ?? throw new InvalidOperationException(
+        "Supabase URL is missing. Set 'Supabase:Url' (e.g. https://<project>.supabase.co).");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"{supabaseUrl.TrimEnd('/')}/auth/v1";
+        options.Audience = "authenticated";
+        options.MapInboundClaims = false;
+    });
+
+// Every endpoint needs a signed-in user unless it says otherwise.
+builder.Services.AddAuthorization(options =>
+    options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 var app = builder.Build();
 
@@ -80,9 +96,12 @@ app.UseStatusCodePages();
 
 app.UseCors("Frontend");
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().AllowAnonymous();
 }
 
 app.MapControllers();
@@ -92,7 +111,8 @@ app.MapGet("/api/health", () =>
     {
         status = "Healthy",
         application = "ExpenseTracker.Api"
-    }));
+    }))
+    .AllowAnonymous();
 
 app.MapGet("/api/health/database",
     async (AppDbContext db) =>
@@ -104,7 +124,8 @@ app.MapGet("/api/health/database",
             : Results.Problem(
                 "Database connection unavailable",
                 statusCode: 503);
-    });
+    })
+    .AllowAnonymous();
 
 app.Run();
 

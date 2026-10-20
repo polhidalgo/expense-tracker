@@ -140,7 +140,8 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
     {
         await using var unreachable = new ApiFactory(
             "Host=127.0.0.1;Port=1;Database=unreachable;Username=nobody;Password=secret-value;Timeout=2",
-            Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
+            Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
+            "https://example.supabase.co");
         using var client = unreachable.CreateClientFor(TestUsers.UserA);
 
         var response = await client.PostAsJsonAsync("/api/expenses", ValidRequest());

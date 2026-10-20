@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError, getDashboardSummary } from "../api";
+import { errorMessage, getDashboardSummary } from "../api";
 import { formatCurrency, toIsoDate } from "../format";
 import type { DashboardSummary } from "../types";
 
@@ -17,13 +17,6 @@ function currentMonth(): Period {
     startDate: toIsoDate(new Date(now.getFullYear(), now.getMonth(), 1)),
     endDate: toIsoDate(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
   };
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return Object.values(error.fieldErrors).flat()[0] ?? error.message;
-  }
-  return "Something went wrong.";
 }
 
 function DashboardPage() {
