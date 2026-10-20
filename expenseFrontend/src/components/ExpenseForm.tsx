@@ -137,12 +137,6 @@ function ExpenseForm({ title, categories, initial, notDetected = [], onSubmit, o
         {fieldNote("description")}
       </label>
 
-      {errors.analysisId && (
-        <p className="error" role="alert">
-          {errors.analysisId[0]}
-        </p>
-      )}
-
       {message && (
         <p className="error" role="alert">
           {message}

@@ -27,14 +27,13 @@ public sealed class AnalyzeReceiptTests(TestDatabaseFixture database) : Integrat
         var response = await client.PostAsync("/api/receipts/analyze", ImageForm(image, "receipt.png", "image/png"));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var analysis = await response.Content.ReadFromJsonAsync<AnalysisResponse>();
-        Assert.NotNull(analysis);
-        Assert.NotEqual(Guid.Empty, analysis.AnalysisId);
-        Assert.Equal(8.76m, analysis.Draft.Amount);
-        Assert.Equal(new DateOnly(2026, 10, 12), analysis.Draft.ExpenseDate);
-        Assert.Contains("ALDI", analysis.Draft.Merchant ?? "", StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(CategorySeed.Groceries, analysis.Draft.CategoryId);
-        Assert.True(analysis.Draft.Currency is null or "AUD");
+        var draft = await response.Content.ReadFromJsonAsync<DraftResponse>();
+        Assert.NotNull(draft);
+        Assert.Equal(8.76m, draft.Amount);
+        Assert.Equal(new DateOnly(2026, 10, 12), draft.ExpenseDate);
+        Assert.Contains("ALDI", draft.Merchant ?? "", StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(CategorySeed.Groceries, draft.CategoryId);
+        Assert.True(draft.Currency is null or "AUD");
         Assert.Equal(0, await CountExpensesAsync());
     }
 
@@ -92,8 +91,6 @@ public sealed class AnalyzeReceiptTests(TestDatabaseFixture database) : Integrat
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         return await db.Expenses.CountAsync();
     }
-
-    private sealed record AnalysisResponse(Guid AnalysisId, DraftResponse Draft);
 
     private sealed record DraftResponse(string? Merchant, decimal? Amount, string? Currency, DateOnly? ExpenseDate, Guid? CategoryId);
 }

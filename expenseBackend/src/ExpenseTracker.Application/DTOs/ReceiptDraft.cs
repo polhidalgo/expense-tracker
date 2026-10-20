@@ -10,5 +10,3 @@ public sealed record ReceiptDraft(
     string? Currency,
     DateOnly? ExpenseDate,
     Guid? CategoryId);
-
-public sealed record ReceiptAnalysisDto(Guid AnalysisId, ReceiptDraft Draft);

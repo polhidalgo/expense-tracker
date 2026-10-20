@@ -1,5 +1,4 @@
 using ExpenseTracker.Domain.Entities;
-using ExpenseTracker.Domain.Enums;
 using ExpenseTracker.Infrastructure.Persistence;
 using ExpenseTracker.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +31,7 @@ public sealed class ExpenseStorageTests(TestDatabaseFixture database) : Integrat
     public async Task Amount_IsSavedAndReadBackExactly()
     {
         var expense = new Expense(TestUsers.UserA, CategorySeed.Groceries, 42.50m, "AUD",
-            new DateOnly(2026, 10, 18), "Woolworths", null, ExpenseSource.Manual);
+            new DateOnly(2026, 10, 18), "Woolworths", null);
 
         using (var scope = Factory.Services.CreateScope())
         {
@@ -65,8 +64,8 @@ public sealed class ExpenseStorageTests(TestDatabaseFixture database) : Integrat
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var ex = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlAsync($"""
-            INSERT INTO "Expenses" ("Id", "UserId", "CategoryId", "Amount", "Currency", "ExpenseDate", "Source", "CreatedAt")
-            VALUES ({Guid.NewGuid()}, {TestUsers.UserA}, {CategorySeed.Groceries}, {(decimal)amount}, 'AUD', DATE '2026-10-18', 'Manual', now())
+            INSERT INTO "Expenses" ("Id", "UserId", "CategoryId", "Amount", "Currency", "ExpenseDate", "CreatedAt")
+            VALUES ({Guid.NewGuid()}, {TestUsers.UserA}, {CategorySeed.Groceries}, {(decimal)amount}, 'AUD', DATE '2026-10-18', now())
             """));
 
         Assert.Equal(PostgresErrorCodes.CheckViolation, ex.SqlState);
@@ -81,7 +80,7 @@ public sealed class ExpenseStorageTests(TestDatabaseFixture database) : Integrat
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         db.Expenses.Add(new Expense(TestUsers.UserA, Guid.NewGuid(), 10m, "AUD",
-            new DateOnly(2026, 10, 18), null, null, ExpenseSource.Manual));
+            new DateOnly(2026, 10, 18), null, null));
 
         var ex = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
         Assert.Equal(PostgresErrorCodes.ForeignKeyViolation, ((PostgresException)ex.InnerException!).SqlState);

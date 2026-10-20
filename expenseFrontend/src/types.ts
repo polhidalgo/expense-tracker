@@ -13,7 +13,6 @@ export type Expense = {
   expenseDate: string;
   merchant: string | null;
   description: string | null;
-  source: string;
   createdAt: string;
 };
 
@@ -57,9 +56,4 @@ export type ReceiptDraft = {
   currency: string | null;
   expenseDate: string | null;
   categoryId: string | null;
-};
-
-export type ReceiptAnalysis = {
-  analysisId: string;
-  draft: ReceiptDraft;
 };

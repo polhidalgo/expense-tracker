@@ -1,4 +1,3 @@
-using ExpenseTracker.Domain.Enums;
 using ExpenseTracker.Domain.Rules;
 
 namespace ExpenseTracker.Domain.Entities;
@@ -13,7 +12,6 @@ public class Expense
     public DateOnly ExpenseDate { get; private set; }
     public string? Merchant { get; private set; }
     public string? Description { get; private set; }
-    public ExpenseSource Source { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
     // Used by EF 
@@ -28,14 +26,12 @@ public class Expense
         string? currency,
         DateOnly expenseDate,
         string? merchant,
-        string? description,
-        ExpenseSource source)
+        string? description)
     {
         SetDetails(categoryId, amount, currency, expenseDate, merchant, description);
 
         Id = Guid.CreateVersion7();
         UserId = userId;
-        Source = source;
         CreatedAt = DateTimeOffset.UtcNow;
     }
 

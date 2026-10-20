@@ -2,7 +2,6 @@ using ExpenseTracker.Application.DTOs;
 using ExpenseTracker.Application.Exceptions;
 using ExpenseTracker.Application.Interfaces;
 using ExpenseTracker.Domain.Entities;
-using ExpenseTracker.Domain.Enums;
 using ExpenseTracker.Domain.Rules;
 using ExpenseTracker.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,7 @@ namespace ExpenseTracker.Infrastructure.Services;
 
 public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : IExpenseService
 {
-    public async Task<ExpenseDto> CreateAsync(ExpenseRequest request, ExpenseSource source, CancellationToken cancellationToken = default)
+    public async Task<ExpenseDto> CreateAsync(ExpenseRequest request, CancellationToken cancellationToken = default)
     {
         // The entity validates the fields (400) before the category is looked up (404).
         var expense = new Expense(
@@ -21,8 +20,7 @@ public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : 
             request.Currency,
             request.ExpenseDate,
             request.Merchant,
-            request.Description,
-            source);
+            request.Description);
 
         var categoryName = await GetCategoryNameAsync(request.CategoryId, cancellationToken);
 
@@ -141,6 +139,5 @@ public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : 
         e.ExpenseDate,
         e.Merchant,
         e.Description,
-        e.Source.ToString(),
         e.CreatedAt);
 }

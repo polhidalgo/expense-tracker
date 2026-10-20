@@ -157,7 +157,6 @@ function ExpensesPage() {
                   <td>{e.expenseDate}</td>
                   <td>
                     {e.merchant ?? "—"}
-                    {e.source === "AiReceipt" && <span className="badge">AI</span>}
                     {e.description && <div className="muted">{e.description}</div>}
                   </td>
                   <td>{e.categoryName}</td>

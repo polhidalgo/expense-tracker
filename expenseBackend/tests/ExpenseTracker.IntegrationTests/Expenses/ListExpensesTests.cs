@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using ExpenseTracker.Domain.Entities;
-using ExpenseTracker.Domain.Enums;
 using ExpenseTracker.Infrastructure.Persistence;
 using ExpenseTracker.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
@@ -98,7 +97,7 @@ public sealed class ListExpensesTests(TestDatabaseFixture database) : Integratio
     }
 
     private static Expense Expense(Guid userId, string date, Guid categoryId, string merchant) =>
-        new(userId, categoryId, 10m, "AUD", DateOnly.Parse(date), merchant, null, ExpenseSource.Manual);
+        new(userId, categoryId, 10m, "AUD", DateOnly.Parse(date), merchant, null);
 
     private async Task AddExpensesAsync(params Expense[] expenses)
     {

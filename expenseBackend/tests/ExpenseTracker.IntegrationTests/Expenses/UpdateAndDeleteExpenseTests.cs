@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using ExpenseTracker.Domain.Entities;
-using ExpenseTracker.Domain.Enums;
 using ExpenseTracker.Infrastructure.Persistence;
 using ExpenseTracker.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -22,11 +21,11 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         description = "New description"
     };
 
-    // Every editable field changes; id, owner, createdAt and source do not.
+    // Every editable field changes; id, owner and createdAt do not.
     [Fact]
     public async Task Update_ChangesEditableFields_Only()
     {
-        var original = await AddExpenseAsync(TestUsers.UserA, ExpenseSource.AiReceipt);
+        var original = await AddExpenseAsync(TestUsers.UserA);
         using var client = Factory.CreateClientFor(TestUsers.UserA);
 
         var response = await client.PutAsJsonAsync($"/api/expenses/{original.Id}", UpdateRequest());
@@ -47,7 +46,6 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
 
             Assert.Equal(original.Id, expense.Id);
             Assert.Equal(TestUsers.UserA, expense.UserId);
-            Assert.Equal("AiReceipt", expense.Source);
             Assert.Equal(original.CreatedAt, expense.CreatedAt, TimeSpan.FromMilliseconds(1));
         }
     }
@@ -118,10 +116,10 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         await AssertUnchangedAsync(expense);
     }
 
-    private async Task<Expense> AddExpenseAsync(Guid userId, ExpenseSource source = ExpenseSource.Manual)
+    private async Task<Expense> AddExpenseAsync(Guid userId)
     {
         var expense = new Expense(userId, CategorySeed.Groceries, 42.50m, "AUD",
-            new DateOnly(2026, 10, 18), "Woolworths", "Weekly groceries", source);
+            new DateOnly(2026, 10, 18), "Woolworths", "Weekly groceries");
 
         using var scope = Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -143,7 +141,6 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         Assert.Equal(original.ExpenseDate, stored.ExpenseDate);
         Assert.Equal(original.Merchant, stored.Merchant);
         Assert.Equal(original.Description, stored.Description);
-        Assert.Equal(original.Source, stored.Source);
     }
 
     private sealed record ExpenseResponse(
@@ -156,6 +153,5 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         DateOnly ExpenseDate,
         string? Merchant,
         string? Description,
-        string Source,
         DateTimeOffset CreatedAt);
 }

@@ -10,5 +10,4 @@ public sealed record ExpenseDto(
     DateOnly ExpenseDate,
     string? Merchant,
     string? Description,
-    string Source,
     DateTimeOffset CreatedAt);

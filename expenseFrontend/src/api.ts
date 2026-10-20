@@ -6,7 +6,7 @@ import type {
   ExpenseRequest,
   FieldErrors,
   PagedResult,
-  ReceiptAnalysis,
+  ReceiptDraft,
 } from "./types";
 import { supabase } from "./supabase";
 
@@ -93,11 +93,5 @@ export const getDashboardSummary = (startDate: string, endDate: string) =>
 export function analyzeReceipt(file: File) {
   const form = new FormData();
   form.append("file", file);
-  return request<ReceiptAnalysis>("/api/receipts/analyze", { method: "POST", body: form });
+  return request<ReceiptDraft>("/api/receipts/analyze", { method: "POST", body: form });
 }
-
-export const confirmReceipt = (analysisId: string, body: ExpenseRequest) =>
-  request<Expense>("/api/receipts/confirm", {
-    method: "POST",
-    body: JSON.stringify({ analysisId, ...body }),
-  });

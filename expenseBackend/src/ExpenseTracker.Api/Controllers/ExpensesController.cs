@@ -1,6 +1,5 @@
 using ExpenseTracker.Application.DTOs;
 using ExpenseTracker.Application.Interfaces;
-using ExpenseTracker.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.Api.Controllers;
@@ -16,7 +15,7 @@ public sealed class ExpensesController(IExpenseService expenses) : ControllerBas
     [HttpPost]
     public async Task<ActionResult<ExpenseDto>> Create(ExpenseRequest request, CancellationToken cancellationToken)
     {
-        var expense = await expenses.CreateAsync(request, ExpenseSource.Manual, cancellationToken);
+        var expense = await expenses.CreateAsync(request, cancellationToken);
         return CreatedAtAction(nameof(Get), new { id = expense.Id }, expense);
     }
 

@@ -55,7 +55,6 @@ builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IReceiptService, ReceiptService>();
 
-builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<GroqReceiptExtractor>(client =>
 {
     client.BaseAddress = new Uri("https://api.groq.com/openai/v1/");

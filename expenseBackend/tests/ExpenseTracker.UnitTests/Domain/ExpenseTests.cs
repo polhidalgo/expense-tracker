@@ -1,5 +1,4 @@
 using ExpenseTracker.Domain.Entities;
-using ExpenseTracker.Domain.Enums;
 using ExpenseTracker.Domain.Rules;
 
 namespace ExpenseTracker.UnitTests.Domain;
@@ -19,7 +18,7 @@ public class ExpenseTests
         DateOnly? expenseDate = null,
         Guid? categoryId = null) =>
         new(Owner, categoryId ?? Groceries, amount, currency, expenseDate ?? Yesterday,
-            merchant, description, ExpenseSource.Manual);
+            merchant, description);
 
     // Asserts the action is rejected with an error for exactly this field.
     private static void AssertRejected(string field, Action action)
@@ -28,7 +27,7 @@ public class ExpenseTests
         Assert.Equal([field], ex.Errors.Keys);
     }
 
-    // Valid input keeps its values and sets the owner/source/creation time.
+    // Valid input keeps its values and sets the owner and creation time.
     [Fact]
     public void Create_WithValidData_SavesValuesAndOwner()
     {
@@ -36,7 +35,6 @@ public class ExpenseTests
 
         Assert.NotEqual(Guid.Empty, expense.Id);
         Assert.Equal(Owner, expense.UserId);
-        Assert.Equal(ExpenseSource.Manual, expense.Source);
         Assert.Equal(TimeSpan.Zero, expense.CreatedAt.Offset);
         Assert.Equal(42.50m, expense.Amount);
         Assert.Equal("AUD", expense.Currency);
@@ -143,12 +141,12 @@ public class ExpenseTests
             ex.Errors.Keys.Order());
     }
 
-    // Update changes editable fields, never Id/owner/source/creation time.
+    // Update changes editable fields, never Id/owner/creation time.
     [Fact]
     public void Update_WithValidData_ChangesOnlyEditableFields()
     {
         var expense = NewExpense();
-        var (id, owner, source, createdAt) = (expense.Id, expense.UserId, expense.Source, expense.CreatedAt);
+        var (id, owner, createdAt) = (expense.Id, expense.UserId, expense.CreatedAt);
 
         expense.Update(Transport, 7.20m, null, new DateOnly(2026, 10, 1), "Opal", null);
 
@@ -157,7 +155,6 @@ public class ExpenseTests
         Assert.Equal("Opal", expense.Merchant);
         Assert.Equal(id, expense.Id);
         Assert.Equal(owner, expense.UserId);
-        Assert.Equal(source, expense.Source);
         Assert.Equal(createdAt, expense.CreatedAt);
     }
 

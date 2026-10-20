@@ -192,11 +192,3 @@ dialog {
   border: 1px solid var(--accent);
   border-radius: 8px;
 }
-
-.badge {
-  margin-left: 0.5rem;
-  padding: 0 0.4rem;
-  font-size: 0.75rem;
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-}

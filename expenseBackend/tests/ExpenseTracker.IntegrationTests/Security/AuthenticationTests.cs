@@ -17,7 +17,6 @@ public sealed class AuthenticationTests(TestDatabaseFixture database) : Integrat
     [InlineData("GET", "/api/categories")]
     [InlineData("GET", "/api/dashboard/summary?startDate=2026-10-01&endDate=2026-10-31")]
     [InlineData("POST", "/api/receipts/analyze")]
-    [InlineData("POST", "/api/receipts/confirm")]
     public async Task PrivateEndpoint_WithoutUser_Returns401(string method, string path)
     {
         using var client = Factory.CreateClient();

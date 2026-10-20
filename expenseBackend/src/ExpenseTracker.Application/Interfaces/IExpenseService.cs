@@ -1,11 +1,10 @@
 using ExpenseTracker.Application.DTOs;
-using ExpenseTracker.Domain.Enums;
 
 namespace ExpenseTracker.Application.Interfaces;
 
 public interface IExpenseService
 {
-    Task<ExpenseDto> CreateAsync(ExpenseRequest request, ExpenseSource source, CancellationToken cancellationToken = default);
+    Task<ExpenseDto> CreateAsync(ExpenseRequest request, CancellationToken cancellationToken = default);
 
     Task<ExpenseDto> GetAsync(Guid id, CancellationToken cancellationToken = default);
 

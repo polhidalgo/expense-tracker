@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, analyzeReceipt, confirmReceipt, errorMessage, getCategories } from "../api";
+import { ApiError, analyzeReceipt, createExpense, errorMessage, getCategories } from "../api";
 import ExpenseForm, { type ExpenseFormValues } from "../components/ExpenseForm";
-import type { Category, ReceiptAnalysis } from "../types";
+import type { Category, ReceiptDraft } from "../types";
 
 type AnalyzeError = { message: string; canRetry: boolean };
 
@@ -14,7 +14,7 @@ function errorFrom(error: unknown): AnalyzeError {
 
 // Empty AI values stay empty, so the user has to fill them in. Only the currency falls back to AUD,
 // the only supported currency.
-function toFormValues({ draft }: ReceiptAnalysis): ExpenseFormValues {
+function toFormValues(draft: ReceiptDraft): ExpenseFormValues {
   return {
     amount: draft.amount?.toString() ?? "",
     currency: draft.currency ?? "AUD",
@@ -25,7 +25,7 @@ function toFormValues({ draft }: ReceiptAnalysis): ExpenseFormValues {
   };
 }
 
-function notDetected({ draft }: ReceiptAnalysis): (keyof ExpenseFormValues)[] {
+function notDetected(draft: ReceiptDraft): (keyof ExpenseFormValues)[] {
   const fields: (keyof ExpenseFormValues)[] = [];
   if (draft.amount === null) fields.push("amount");
   if (draft.expenseDate === null) fields.push("expenseDate");
@@ -39,7 +39,7 @@ function ReceiptPage() {
   const [file, setFile] = useState<File | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<AnalyzeError | null>(null);
-  const [analysis, setAnalysis] = useState<ReceiptAnalysis | null>(null);
+  const [draft, setDraft] = useState<ReceiptDraft | null>(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ function ReceiptPage() {
     setError(null);
     setSaved(false);
     try {
-      setAnalysis(await analyzeReceipt(file));
+      setDraft(await analyzeReceipt(file));
     } catch (err) {
       setError(errorFrom(err));
     } finally {
@@ -64,7 +64,7 @@ function ReceiptPage() {
   }
 
   function reset() {
-    setAnalysis(null);
+    setDraft(null);
     setFile(null);
   }
 
@@ -72,7 +72,7 @@ function ReceiptPage() {
     <>
       <h1>Receipt</h1>
 
-      {!analysis && (
+      {!draft && (
         <form className="filters" onSubmit={analyze}>
           <label>
             Receipt or payment screenshot (JPEG, PNG or WebP, max 3 MB)
@@ -108,18 +108,17 @@ function ReceiptPage() {
         </p>
       )}
 
-      {analysis && (
+      {draft && (
         <>
           <p className="notice" role="note">
             AI suggestions may be wrong. Review before saving.
           </p>
           <ExpenseForm
-            key={analysis.analysisId}
             title="Review expense"
             categories={categories}
-            initial={toFormValues(analysis)}
-            notDetected={notDetected(analysis)}
-            onSubmit={(body) => confirmReceipt(analysis.analysisId, body)}
+            initial={toFormValues(draft)}
+            notDetected={notDetected(draft)}
+            onSubmit={createExpense}
             onSaved={() => {
               reset();
               setSaved(true);

@@ -32,7 +32,6 @@ namespace ExpenseTracker.Infrastructure.Persistence
                 expense.Property(e => e.Description).HasMaxLength(500);
                 expense.Property(e => e.ExpenseDate).HasColumnType("date");
                 expense.Property(e => e.CreatedAt).HasColumnType("timestamp with time zone");
-                expense.Property(e => e.Source).HasConversion<string>().HasMaxLength(20);
 
                 expense.ToTable(t => t.HasCheckConstraint("CK_Expenses_Amount_Positive", "\"Amount\" > 0"));
 

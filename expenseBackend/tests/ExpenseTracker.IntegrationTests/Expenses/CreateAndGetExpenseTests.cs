@@ -51,12 +51,12 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         Assert.Equal(new DateOnly(2026, 10, 18), fetched.ExpenseDate);
         Assert.Equal("Woolworths", fetched.Merchant);
         Assert.Equal("Weekly groceries", fetched.Description);
-        Assert.Equal("Manual", fetched.Source);
     }
 
-    // Owner, source and creation time sent by the client are ignored.
+    // Owner and creation time sent by the client are ignored, and so is an unknown field like "source".
+    // Responses have no "source" field: the app does not record where an expense came from.
     [Fact]
-    public async Task Create_IgnoresOwnerSourceAndCreatedAt_FromBody()
+    public async Task Create_IgnoresOwnerCreatedAtAndSource_FromBody()
     {
         using var client = Factory.CreateClientFor(TestUsers.UserA);
 
@@ -74,7 +74,7 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         var created = await response.Content.ReadFromJsonAsync<ExpenseResponse>();
         Assert.NotNull(created);
         Assert.Equal(TestUsers.UserA, created.UserId);
-        Assert.Equal("Manual", created.Source);
+        Assert.DoesNotContain("\"source\"", await response.Content.ReadAsStringAsync());
         Assert.Equal("AUD", created.Currency);
         Assert.True(created.CreatedAt > DateTimeOffset.UtcNow.AddMinutes(-5));
     }
@@ -171,6 +171,5 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         DateOnly ExpenseDate,
         string? Merchant,
         string? Description,
-        string Source,
         DateTimeOffset CreatedAt);
 }
