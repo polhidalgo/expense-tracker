@@ -37,6 +37,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Synthetic local user, Development only (D-01). No ICurrentUser is registered
 // in any other environment until real authentication exists (FR-AUTH-001).

@@ -132,7 +132,7 @@ public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : 
             .SingleOrDefaultAsync(cancellationToken)
         ?? throw new NotFoundException("Category not found.");
 
-    private static ExpenseDto ToDto(Expense e, string categoryName) => new(
+    internal static ExpenseDto ToDto(Expense e, string categoryName) => new(
         e.Id,
         e.UserId,
         e.CategoryId,

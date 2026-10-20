@@ -13,6 +13,5 @@ public interface IExpenseService
 
     Task<ExpenseDto> UpdateAsync(Guid id, ExpenseRequest request, CancellationToken cancellationToken = default);
 
-    // Permanent delete (D-05).
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
