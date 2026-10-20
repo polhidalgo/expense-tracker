@@ -28,6 +28,30 @@ public sealed class ApiExceptionHandler(
                 Title = "Not found",
                 Detail = ex.Message
             },
+            FileTooLargeException ex => new ProblemDetails
+            {
+                Status = StatusCodes.Status413PayloadTooLarge,
+                Title = "File too large",
+                Detail = ex.Message
+            },
+            ReceiptExtractionException { Reason: ReceiptFailure.RateLimited } => new ProblemDetails
+            {
+                Status = StatusCodes.Status429TooManyRequests,
+                Title = "Too many requests",
+                Detail = "The receipt reader is busy. Try again in a minute."
+            },
+            ReceiptExtractionException { Reason: ReceiptFailure.InvalidResponse } => new ProblemDetails
+            {
+                Status = StatusCodes.Status502BadGateway,
+                Title = "Receipt could not be read",
+                Detail = "The receipt reader returned an invalid answer. Try again or enter the expense manually."
+            },
+            ReceiptExtractionException => new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Service unavailable",
+                Detail = "The receipt reader is unavailable. Try again later or enter the expense manually."
+            },
             _ when IsDatabaseUnavailable(exception) => new ProblemDetails
             {
                 Status = StatusCodes.Status503ServiceUnavailable,

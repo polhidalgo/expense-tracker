@@ -1,6 +1,7 @@
 using ExpenseTracker.Api;
 using ExpenseTracker.Api.ErrorHandling;
 using ExpenseTracker.Application.Interfaces;
+using ExpenseTracker.Infrastructure.AI;
 using ExpenseTracker.Infrastructure.Persistence;
 using ExpenseTracker.Infrastructure.Security;
 using ExpenseTracker.Infrastructure.Services;
@@ -50,6 +51,14 @@ builder.Services.AddScoped<SecretStore>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IReceiptService, ReceiptService>();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<GroqReceiptExtractor>(client =>
+{
+    client.BaseAddress = new Uri("https://api.groq.com/openai/v1/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // Local user for Development only. No ICurrentUser is registered elsewhere
 // until real authentication exists.

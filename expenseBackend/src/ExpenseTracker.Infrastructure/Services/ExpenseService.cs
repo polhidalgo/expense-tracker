@@ -11,7 +11,7 @@ namespace ExpenseTracker.Infrastructure.Services;
 
 public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : IExpenseService
 {
-    public async Task<ExpenseDto> CreateAsync(ExpenseRequest request, CancellationToken cancellationToken = default)
+    public async Task<ExpenseDto> CreateAsync(ExpenseRequest request, ExpenseSource source, CancellationToken cancellationToken = default)
     {
         // The entity validates the fields (400) before the category is looked up (404).
         var expense = new Expense(
@@ -22,7 +22,7 @@ public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : 
             request.ExpenseDate,
             request.Merchant,
             request.Description,
-            ExpenseSource.Manual);
+            source);
 
         var categoryName = await GetCategoryNameAsync(request.CategoryId, cancellationToken);
 

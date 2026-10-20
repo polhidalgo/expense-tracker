@@ -25,4 +25,8 @@
     <ProjectReference Include="..\..\src\ExpenseTracker.Api\ExpenseTracker.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="TestFiles\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

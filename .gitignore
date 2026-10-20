@@ -20,3 +20,6 @@
 docs/
 # Visual Studio per-user settings
 *.user
+
+# Test image
+expenseBackend/tests/ExpenseTracker.IntegrationTests/TestFiles/receipt.png
