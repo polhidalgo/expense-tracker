@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using ExpenseTracker.Infrastructure.Persistence;
@@ -87,7 +88,7 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
     {
         using var client = Factory.CreateClientFor(TestUsers.UserA);
 
-        var response = await client.PostAsJsonAsync("/api/expenses", ValidRequest(decimal.Parse(amount), currency));
+        var response = await client.PostAsJsonAsync("/api/expenses", ValidRequest(decimal.Parse(amount, CultureInfo.InvariantCulture), currency));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();

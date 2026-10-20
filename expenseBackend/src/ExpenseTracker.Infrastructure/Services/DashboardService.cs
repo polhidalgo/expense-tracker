@@ -20,15 +20,15 @@ public sealed class DashboardService(AppDbContext db, ICurrentUser currentUser) 
 
         var totals = await expenses
             .GroupBy(e => e.Currency)
+            .OrderBy(g => g.Key)
             .Select(g => new CurrencyTotalDto(g.Key, g.Sum(e => e.Amount), g.Count()))
-            .OrderBy(t => t.Currency)
             .ToListAsync(cancellationToken);
 
         var byCategory = await expenses
             .Join(db.Categories, e => e.CategoryId, c => c.Id, (e, c) => new { e.CategoryId, CategoryName = c.Name, e.Currency, e.Amount })
             .GroupBy(x => new { x.CategoryId, x.CategoryName, x.Currency })
+            .OrderByDescending(g => g.Sum(x => x.Amount))
             .Select(g => new CategoryTotalDto(g.Key.CategoryId, g.Key.CategoryName, g.Key.Currency, g.Sum(x => x.Amount)))
-            .OrderByDescending(t => t.Total)
             .ToListAsync(cancellationToken);
 
         var recent = await expenses
