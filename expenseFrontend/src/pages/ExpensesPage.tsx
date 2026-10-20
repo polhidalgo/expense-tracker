@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError, deleteExpense, getCategories, listExpenses } from "../api";
+import { ApiError, createExpense, deleteExpense, getCategories, listExpenses, updateExpense } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ExpenseFilters, { type Filters } from "../components/ExpenseFilters";
 import ExpenseForm from "../components/ExpenseForm";
@@ -89,11 +89,31 @@ function ExpensesPage() {
         )}
       </div>
 
-      {editing !== null && (
+      {editing === "new" && (
         <ExpenseForm
-          key={editing === "new" ? "new" : editing.id}
-          expense={editing === "new" ? undefined : editing}
+          key="new"
+          title="New expense"
           categories={categories}
+          onSubmit={createExpense}
+          onSaved={handleSaved}
+          onCancel={() => setEditing(null)}
+        />
+      )}
+
+      {editing !== null && editing !== "new" && (
+        <ExpenseForm
+          key={editing.id}
+          title="Edit expense"
+          categories={categories}
+          initial={{
+            amount: String(editing.amount),
+            currency: editing.currency,
+            expenseDate: editing.expenseDate,
+            categoryId: editing.categoryId,
+            merchant: editing.merchant ?? "",
+            description: editing.description ?? "",
+          }}
+          onSubmit={(body) => updateExpense(editing.id, body)}
           onSaved={handleSaved}
           onCancel={() => setEditing(null)}
         />
@@ -144,6 +164,7 @@ function ExpensesPage() {
                   <td>{e.expenseDate}</td>
                   <td>
                     {e.merchant ?? "—"}
+                    {e.source === "AiReceipt" && <span className="badge">AI</span>}
                     {e.description && <div className="muted">{e.description}</div>}
                   </td>
                   <td>{e.categoryName}</td>

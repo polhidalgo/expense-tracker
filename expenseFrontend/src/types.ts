@@ -50,3 +50,16 @@ export type DashboardSummary = {
   byCategory: { categoryId: string; categoryName: string; currency: string; total: number }[];
   recent: Expense[];
 };
+
+export type ReceiptDraft = {
+  merchant: string | null;
+  amount: number | null;
+  currency: string | null;
+  expenseDate: string | null;
+  categoryId: string | null;
+};
+
+export type ReceiptAnalysis = {
+  analysisId: string;
+  draft: ReceiptDraft;
+};

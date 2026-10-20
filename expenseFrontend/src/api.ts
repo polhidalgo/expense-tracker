@@ -6,6 +6,7 @@ import type {
   ExpenseRequest,
   FieldErrors,
   PagedResult,
+  ReceiptAnalysis,
 } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
@@ -24,10 +25,9 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, {
-      ...init,
-      headers: { "Content-Type": "application/json", ...init?.headers },
-    });
+    // A file upload (FormData) sets its own Content-Type.
+    const headers = init?.body instanceof FormData ? init.headers : { "Content-Type": "application/json", ...init?.headers };
+    response = await fetch(`${API_URL}${path}`, { ...init, headers });
   } catch {
     throw new ApiError("Cannot reach the server.", 0);
   }
@@ -72,3 +72,15 @@ export const deleteExpense = (id: string) =>
 
 export const getDashboardSummary = (startDate: string, endDate: string) =>
   request<DashboardSummary>(`/api/dashboard/summary${toQueryString({ startDate, endDate })}`);
+
+export function analyzeReceipt(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return request<ReceiptAnalysis>("/api/receipts/analyze", { method: "POST", body: form });
+}
+
+export const confirmReceipt = (analysisId: string, body: ExpenseRequest) =>
+  request<Expense>("/api/receipts/confirm", {
+    method: "POST",
+    body: JSON.stringify({ analysisId, ...body }),
+  });

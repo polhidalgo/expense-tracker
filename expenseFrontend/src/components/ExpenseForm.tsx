@@ -1,26 +1,44 @@
 import { useRef, useState, type FormEvent } from "react";
-import { ApiError, createExpense, updateExpense } from "../api";
+import { ApiError } from "../api";
 import { toIsoDate } from "../format";
-import type { Category, Expense, FieldErrors } from "../types";
+import type { Category, ExpenseRequest, FieldErrors } from "../types";
+
+export type ExpenseFormValues = {
+  amount: string;
+  currency: string;
+  expenseDate: string;
+  categoryId: string;
+  merchant: string;
+  description: string;
+};
 
 type Props = {
-  expense?: Expense;
+  title: string;
   categories: Category[];
+  initial?: ExpenseFormValues;
+  notDetected?: (keyof ExpenseFormValues)[];
+  onSubmit: (body: ExpenseRequest) => Promise<unknown>;
   onSaved: () => void;
   onCancel: () => void;
 };
 
-function ExpenseForm({ expense, categories, onSaved, onCancel }: Props) {
-  const [amount, setAmount] = useState(expense ? String(expense.amount) : "");
-  const [currency, setCurrency] = useState(expense?.currency ?? "AUD");
-  const [expenseDate, setExpenseDate] = useState(expense?.expenseDate ?? toIsoDate(new Date()));
-  const [categoryId, setCategoryId] = useState(expense?.categoryId ?? "");
-  const [merchant, setMerchant] = useState(expense?.merchant ?? "");
-  const [description, setDescription] = useState(expense?.description ?? "");
+const emptyValues = (): ExpenseFormValues => ({
+  amount: "",
+  currency: "AUD",
+  expenseDate: toIsoDate(new Date()),
+  categoryId: "",
+  merchant: "",
+  description: "",
+});
+
+function ExpenseForm({ title, categories, initial, notDetected = [], onSubmit, onSaved, onCancel }: Props) {
+  const [values, setValues] = useState<ExpenseFormValues>(initial ?? emptyValues);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+
+  const set = (field: keyof ExpenseFormValues, value: string) => setValues({ ...values, [field]: value });
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -30,18 +48,15 @@ function ExpenseForm({ expense, categories, onSaved, onCancel }: Props) {
     setErrors({});
     setMessage("");
 
-    const body = {
-      amount: Number(amount),
-      currency,
-      expenseDate,
-      categoryId,
-      merchant: merchant || undefined,
-      description: description || undefined,
-    };
-
     try {
-      if (expense) await updateExpense(expense.id, body);
-      else await createExpense(body);
+      await onSubmit({
+        amount: Number(values.amount),
+        currency: values.currency || undefined,
+        expenseDate: values.expenseDate,
+        categoryId: values.categoryId,
+        merchant: values.merchant || undefined,
+        description: values.description || undefined,
+      });
       onSaved();
     } catch (error) {
       if (error instanceof ApiError) {
@@ -56,14 +71,17 @@ function ExpenseForm({ expense, categories, onSaved, onCancel }: Props) {
     }
   }
 
-  const fieldError = (name: string) => {
+  // Shows the backend error for the field, or "Not detected" for an empty AI suggestion.
+  const fieldNote = (name: keyof ExpenseFormValues) => {
     const text = errors[name]?.[0] ?? errors[`$.${name}`]?.[0];
-    return text && <span className="error">{text}</span>;
+    if (text) return <span className="error">{text}</span>;
+    if (notDetected.includes(name)) return <span className="muted">Not detected</span>;
+    return null;
   };
 
   return (
     <form className="expense-form" onSubmit={handleSubmit}>
-      <h2>{expense ? "Edit expense" : "New expense"}</h2>
+      <h2>{title}</h2>
 
       <label>
         Amount
@@ -71,16 +89,16 @@ function ExpenseForm({ expense, categories, onSaved, onCancel }: Props) {
           type="number"
           step="any"
           required
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          value={values.amount}
+          onChange={(e) => set("amount", e.target.value)}
         />
-        {fieldError("amount")}
+        {fieldNote("amount")}
       </label>
 
       <label>
         Currency
-        <input value={currency} maxLength={3} onChange={(e) => setCurrency(e.target.value)} />
-        {fieldError("currency")}
+        <input value={values.currency} maxLength={3} onChange={(e) => set("currency", e.target.value)} />
+        {fieldNote("currency")}
       </label>
 
       <label>
@@ -88,15 +106,15 @@ function ExpenseForm({ expense, categories, onSaved, onCancel }: Props) {
         <input
           type="date"
           required
-          value={expenseDate}
-          onChange={(e) => setExpenseDate(e.target.value)}
+          value={values.expenseDate}
+          onChange={(e) => set("expenseDate", e.target.value)}
         />
-        {fieldError("expenseDate")}
+        {fieldNote("expenseDate")}
       </label>
 
       <label>
         Category
-        <select required value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+        <select required value={values.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
           <option value="">Select a category</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -104,20 +122,26 @@ function ExpenseForm({ expense, categories, onSaved, onCancel }: Props) {
             </option>
           ))}
         </select>
-        {fieldError("categoryId")}
+        {fieldNote("categoryId")}
       </label>
 
       <label>
         Merchant
-        <input value={merchant} onChange={(e) => setMerchant(e.target.value)} />
-        {fieldError("merchant")}
+        <input value={values.merchant} onChange={(e) => set("merchant", e.target.value)} />
+        {fieldNote("merchant")}
       </label>
 
       <label>
         Description
-        <input value={description} onChange={(e) => setDescription(e.target.value)} />
-        {fieldError("description")}
+        <input value={values.description} onChange={(e) => set("description", e.target.value)} />
+        {fieldNote("description")}
       </label>
+
+      {errors.analysisId && (
+        <p className="error" role="alert">
+          {errors.analysisId[0]}
+        </p>
+      )}
 
       {message && (
         <p className="error" role="alert">
