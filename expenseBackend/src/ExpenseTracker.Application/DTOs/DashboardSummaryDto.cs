@@ -1,6 +1,5 @@
 namespace ExpenseTracker.Application.DTOs;
 
-// Totals are per currency and never summed across currencies.
 public sealed record DashboardSummaryDto(
     DateOnly StartDate,
     DateOnly EndDate,

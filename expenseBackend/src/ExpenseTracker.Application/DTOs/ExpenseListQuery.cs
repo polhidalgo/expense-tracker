@@ -1,6 +1,5 @@
 namespace ExpenseTracker.Application.DTOs;
 
-// Query string for listing expenses. Dates are inclusive; every filter is optional.
 public sealed record ExpenseListQuery
 {
     public const int MaxPageSize = 100;

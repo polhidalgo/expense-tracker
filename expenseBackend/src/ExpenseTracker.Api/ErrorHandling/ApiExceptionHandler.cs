@@ -6,7 +6,6 @@ using Npgsql;
 
 namespace ExpenseTracker.Api.ErrorHandling;
 
-// The one place that turns exceptions into HTTP responses (D-13).
 // Anything not handled here falls through to the default 500 ProblemDetails, without internal details.
 public sealed class ApiExceptionHandler(
     IProblemDetailsService problemDetails,

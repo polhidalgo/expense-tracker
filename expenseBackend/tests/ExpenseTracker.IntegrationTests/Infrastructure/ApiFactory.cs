@@ -9,12 +9,13 @@ namespace ExpenseTracker.IntegrationTests.Infrastructure;
 
 // Runs the real API in memory against the test database.
 // The "Testing" environment means the development secrets are never loaded.
-public sealed class ApiFactory(string testConnectionString) : WebApplicationFactory<Program>
+public sealed class ApiFactory(string testConnectionString, string encryptionKey) : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:DefaultConnection", testConnectionString);
+        builder.UseSetting("Secrets:EncryptionKey", encryptionKey);
 
         builder.ConfigureTestServices(services =>
         {

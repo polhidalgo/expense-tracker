@@ -2,7 +2,7 @@ using ExpenseTracker.Application.Interfaces;
 
 namespace ExpenseTracker.Api;
 
-// Replaced by real authentication before any public deployment (FR-AUTH-001).
+// Replaced by real authentication before any public deployment.
 public sealed class LocalCurrentUser(IConfiguration configuration) : ICurrentUser
 {
     public Guid UserId { get; } = Guid.TryParse(configuration["LocalUser:Id"], out var userId)

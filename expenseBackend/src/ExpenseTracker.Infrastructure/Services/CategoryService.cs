@@ -7,7 +7,7 @@ namespace ExpenseTracker.Infrastructure.Services;
 
 public sealed class CategoryService(AppDbContext db) : ICategoryService
 {
-    // Ordering by Id gives the defined order, with Other last (D-15).
+    // Ordering by Id gives the defined order, with Other last.
     public async Task<IReadOnlyList<CategoryDto>> ListAsync(CancellationToken cancellationToken = default) =>
         await db.Categories
             .AsNoTracking()

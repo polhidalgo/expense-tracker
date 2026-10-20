@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using ExpenseTracker.Infrastructure.Persistence;
 using ExpenseTracker.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +25,7 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         description = "Weekly groceries"
     };
 
-    // AC-01 / FR-EXP-001: a valid create returns 201 with Location, and GET returns the saved values.
+    // A valid create returns 201 with Location, and GET returns the saved values.
     [Fact]
     public async Task Create_Valid_Returns201_AndCanBeReadBack()
     {
@@ -53,7 +54,7 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         Assert.Equal("Manual", fetched.Source);
     }
 
-    // AC-01 / FR-EXP-001: owner, source and creation time sent by the client are ignored.
+    // Owner, source and creation time sent by the client are ignored.
     [Fact]
     public async Task Create_IgnoresOwnerSourceAndCreatedAt_FromBody()
     {
@@ -78,7 +79,7 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         Assert.True(created.CreatedAt > DateTimeOffset.UtcNow.AddMinutes(-5));
     }
 
-    // AC-02 / AC-03 / AC-04: invalid amount or currency → 400 with the field error, nothing saved.
+    // Invalid amount or currency → 400 with the field error, nothing saved.
     [Theory]
     [InlineData("0", "AUD", "amount")]
     [InlineData("-1", "AUD", "amount")]
@@ -97,7 +98,7 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         Assert.Equal(0, await CountExpensesAsync());
     }
 
-    // AC-05: a category that is not one of the fixed categories → 404, nothing saved.
+    // A category that is not one of the fixed categories → 404, nothing saved.
     [Fact]
     public async Task Create_UnknownCategory_Returns404_AndSavesNothing()
     {
@@ -109,7 +110,7 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         Assert.Equal(0, await CountExpensesAsync());
     }
 
-    // AC-06 / AC-07 / FR-EXP-002: only the owner can read an expense; others get 404 with no data.
+    // Only the owner can read an expense; others get 404 with no data.
     [Fact]
     public async Task Get_IsOnlyVisibleToOwner()
     {
@@ -133,12 +134,13 @@ public sealed class CreateAndGetExpenseTests(TestDatabaseFixture database) : Int
         Assert.DoesNotContain("42.5", otherBody);
     }
 
-    // AC-17 / FR-EXP-006: with the database unreachable, POST → 503 without internal details.
+    // With the database unreachable, POST → 503 without internal details.
     [Fact]
     public async Task Create_DatabaseUnavailable_Returns503_WithoutInternalDetails()
     {
         await using var unreachable = new ApiFactory(
-            "Host=127.0.0.1;Port=1;Database=unreachable;Username=nobody;Password=secret-value;Timeout=2");
+            "Host=127.0.0.1;Port=1;Database=unreachable;Username=nobody;Password=secret-value;Timeout=2",
+            Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
         using var client = unreachable.CreateClientFor(TestUsers.UserA);
 
         var response = await client.PostAsJsonAsync("/api/expenses", ValidRequest());

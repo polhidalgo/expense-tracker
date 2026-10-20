@@ -12,7 +12,7 @@ namespace ExpenseTracker.IntegrationTests.Dashboard;
 [Collection(DatabaseCollection.Name)]
 public sealed class DashboardSummaryTests(TestDatabaseFixture database) : IntegrationTestBase(database)
 {
-    // FR-UI-002: totals match the user's expenses in the range, boundaries included.
+    // Totals match the user's expenses in the range, boundaries included.
     [Fact]
     public async Task Summary_TotalsOnlyCurrentUsersExpensesInRange()
     {

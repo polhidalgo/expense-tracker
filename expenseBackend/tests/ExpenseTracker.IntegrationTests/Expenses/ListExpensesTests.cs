@@ -12,7 +12,7 @@ namespace ExpenseTracker.IntegrationTests.Expenses;
 [Collection(DatabaseCollection.Name)]
 public sealed class ListExpensesTests(TestDatabaseFixture database) : IntegrationTestBase(database)
 {
-    // AC-08 / FR-EXP-003: only the user's expenses in the range are returned, boundaries included.
+    // Only the user's expenses in the range are returned, boundaries included.
     [Fact]
     public async Task List_FiltersByDateRangeAndCategory_ForCurrentUserOnly()
     {
@@ -41,7 +41,7 @@ public sealed class ListExpensesTests(TestDatabaseFixture database) : Integratio
         Assert.Equal(2, groceries.TotalCount);
     }
 
-    // FR-EXP-003: an empty result is 200 with no items, not an error.
+    // An empty result is 200 with no items, not an error.
     [Fact]
     public async Task List_NoMatches_ReturnsEmptyPage()
     {
@@ -56,7 +56,7 @@ public sealed class ListExpensesTests(TestDatabaseFixture database) : Integratio
         Assert.Equal(0, page.TotalCount);
     }
 
-    // AC-09: with 25 expenses, page 2 of size 10 holds items 11–20, newest first.
+    // With 25 expenses, page 2 of size 10 holds items 11–20, newest first.
     [Fact]
     public async Task List_SecondPage_ReturnsItems11To20_InOrder()
     {
@@ -79,7 +79,7 @@ public sealed class ListExpensesTests(TestDatabaseFixture database) : Integratio
             page.Items.Select(i => i.ExpenseDate));
     }
 
-    // AC-10: invalid paging or date range → 400 with the field error.
+    // Invalid paging or date range → 400 with the field error.
     [Theory]
     [InlineData("page=0", "page")]
     [InlineData("pageSize=0", "pageSize")]

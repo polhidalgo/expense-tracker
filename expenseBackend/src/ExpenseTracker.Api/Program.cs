@@ -2,6 +2,7 @@ using ExpenseTracker.Api;
 using ExpenseTracker.Api.ErrorHandling;
 using ExpenseTracker.Application.Interfaces;
 using ExpenseTracker.Infrastructure.Persistence;
+using ExpenseTracker.Infrastructure.Security;
 using ExpenseTracker.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,12 +36,23 @@ var connectionString = builder.Configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+var encryptionKey = builder.Configuration["Secrets:EncryptionKey"];
+if (string.IsNullOrWhiteSpace(encryptionKey))
+{
+    throw new InvalidOperationException(
+        "Encryption key is missing. Set 'Secrets:EncryptionKey' (32 random bytes in base64) with " +
+        "'dotnet user-secrets set \"Secrets:EncryptionKey\" \"<base64>\" --project src/ExpenseTracker.Api'.");
+}
+
+builder.Services.AddSingleton(new SecretProtector(encryptionKey));
+builder.Services.AddScoped<SecretStore>();
+
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
-// Synthetic local user, Development only (D-01). No ICurrentUser is registered
-// in any other environment until real authentication exists (FR-AUTH-001).
+// Local user for Development only. No ICurrentUser is registered elsewhere
+// until real authentication exists.
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddScoped<ICurrentUser, LocalCurrentUser>();
@@ -48,7 +60,12 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-// Errors are returned as ProblemDetails, without internal details.
+if (args is [SetGroqKeyCommand.Name])
+{
+    await SetGroqKeyCommand.RunAsync(app.Services);
+    return;
+}
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 

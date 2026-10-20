@@ -2,7 +2,6 @@ using ExpenseTracker.Application.DTOs;
 
 namespace ExpenseTracker.Application.Interfaces;
 
-// All operations act on the current user's expenses only.
 public interface IExpenseService
 {
     Task<ExpenseDto> CreateAsync(ExpenseRequest request, CancellationToken cancellationToken = default);

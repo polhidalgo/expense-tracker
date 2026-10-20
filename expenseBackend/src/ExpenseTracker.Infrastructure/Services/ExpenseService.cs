@@ -38,7 +38,7 @@ public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : 
             .SingleOrDefaultAsync(e => e.Id == id && e.UserId == currentUser.UserId, cancellationToken)
             ?? throw new NotFoundException("Expense not found.");
 
-        // Id, owner, source and creation time are never changed. Nothing is saved if anything below fails.
+        // Nothing is saved if anything below fails.
         expense.Update(
             request.CategoryId,
             request.Amount,
@@ -93,7 +93,7 @@ public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : 
 
         var totalCount = await expenses.CountAsync(cancellationToken);
 
-        // Newest first, then by id so pages are stable. PostgreSQL does the filtering and paging.
+        // Then by id so pages are stable.
         var page = await expenses
             .Join(db.Categories, e => e.CategoryId, c => c.Id, (e, c) => new { Expense = e, CategoryName = c.Name })
             .OrderByDescending(x => x.Expense.ExpenseDate)
@@ -107,7 +107,6 @@ public sealed class ExpenseService(AppDbContext db, ICurrentUser currentUser) : 
         return new PagedResult<ExpenseDto>(items, query.Page, query.PageSize, totalCount);
     }
 
-    // Invalid values are rejected, never clamped (FR-EXP-003).
     private static void Validate(ExpenseListQuery query)
     {
         var errors = new Dictionary<string, string[]>();

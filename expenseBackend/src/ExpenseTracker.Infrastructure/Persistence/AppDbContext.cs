@@ -12,6 +12,7 @@ namespace ExpenseTracker.Infrastructure.Persistence
 
         public DbSet<Expense> Expenses => Set<Expense>();
         public DbSet<Category> Categories => Set<Category>();
+        public DbSet<AppSecret> AppSecrets => Set<AppSecret>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,6 +43,13 @@ namespace ExpenseTracker.Infrastructure.Persistence
 
                 expense.HasIndex(e => new { e.UserId, e.ExpenseDate });
                 expense.HasIndex(e => new { e.UserId, e.CategoryId });
+            });
+
+            modelBuilder.Entity<AppSecret>(secret =>
+            {
+                secret.HasKey(s => s.Name);
+                secret.Property(s => s.Name).HasMaxLength(100);
+                secret.Property(s => s.UpdatedAt).HasColumnType("timestamp with time zone");
             });
         }
     }

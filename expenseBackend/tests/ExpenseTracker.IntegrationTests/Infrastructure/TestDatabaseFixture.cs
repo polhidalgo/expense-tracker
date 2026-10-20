@@ -15,8 +15,9 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
     private const string MarkerTable = "__integration_test_marker";
     private const string MigrationsHistoryTable = "__EFMigrationsHistory";
 
-    // The categories are not deleted between tests.
+    // The categories and the encrypted secrets (Groq key) are not deleted between tests.
     private const string CategoriesTable = "Categories";
+    private const string AppSecretsTable = "AppSecrets";
 
     private string _connectionString = string.Empty;
 
@@ -24,11 +25,17 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _connectionString = ReadConnectionString();
+        var configuration = new ConfigurationBuilder()
+            .AddUserSecrets(UserSecretsId)
+            .AddEnvironmentVariables()
+            .Build();
+
+        _connectionString = ReadConnectionString(configuration);
+        var encryptionKey = ReadEncryptionKey(configuration);
 
         await EnsureIsTestDatabaseAsync(_connectionString);
 
-        Factory = new ApiFactory(_connectionString);
+        Factory = new ApiFactory(_connectionString, encryptionKey);
 
         using var scope = Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -49,7 +56,7 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
                 INTO tables
                 FROM pg_tables
                 WHERE schemaname = 'public'
-                  AND tablename NOT IN ('{MigrationsHistoryTable}', '{MarkerTable}', '{CategoriesTable}');
+                  AND tablename NOT IN ('{MigrationsHistoryTable}', '{MarkerTable}', '{CategoriesTable}', '{AppSecretsTable}');
 
                 IF tables IS NOT NULL THEN
                     EXECUTE 'TRUNCATE TABLE ' || tables || ' RESTART IDENTITY CASCADE';
@@ -71,13 +78,24 @@ public sealed class TestDatabaseFixture : IAsyncLifetime
         }
     }
 
-    private static string ReadConnectionString()
+    private static string ReadEncryptionKey(IConfiguration configuration)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets(UserSecretsId)
-            .AddEnvironmentVariables()
-            .Build();
+        var encryptionKey = configuration["Secrets:EncryptionKey"];
 
+        if (string.IsNullOrWhiteSpace(encryptionKey))
+        {
+            throw new InvalidOperationException(
+                "Encryption key is not configured. Set 'Secrets:EncryptionKey' with " +
+                "'dotnet user-secrets set \"Secrets:EncryptionKey\" \"<base64>\" " +
+                "--project tests/ExpenseTracker.IntegrationTests' or the environment variable " +
+                "'Secrets__EncryptionKey'. It must be the key used when the Groq key was saved in the test database.");
+        }
+
+        return encryptionKey;
+    }
+
+    private static string ReadConnectionString(IConfiguration configuration)
+    {
         var connectionString = configuration.GetConnectionString("TestDatabase");
 
         if (string.IsNullOrWhiteSpace(connectionString))

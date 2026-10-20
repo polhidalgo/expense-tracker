@@ -147,6 +147,24 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ExpenseTracker.Infrastructure.Persistence.AppSecret", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("EncryptedValue")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("AppSecrets");
+                });
+
             modelBuilder.Entity("ExpenseTracker.Domain.Entities.Expense", b =>
                 {
                     b.HasOne("ExpenseTracker.Domain.Entities.Category", null)

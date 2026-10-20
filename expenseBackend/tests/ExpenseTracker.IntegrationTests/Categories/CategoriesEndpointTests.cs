@@ -7,7 +7,7 @@ namespace ExpenseTracker.IntegrationTests.Categories;
 [Collection(DatabaseCollection.Name)]
 public sealed class CategoriesEndpointTests(TestDatabaseFixture database) : IntegrationTestBase(database)
 {
-    // AC-15 / FR-CAT-001 / FR-CAT-002: every user gets exactly the fixed list, in its defined order.
+    // Every user gets exactly the fixed list, in its defined order.
     [Fact]
     public async Task List_ReturnsTheFixedCategoriesInOrder_ForAnyUser()
     {

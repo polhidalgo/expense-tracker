@@ -22,7 +22,7 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         description = "New description"
     };
 
-    // AC-11 / FR-EXP-004: every editable field changes; id, owner, createdAt and source do not.
+    // Every editable field changes; id, owner, createdAt and source do not.
     [Fact]
     public async Task Update_ChangesEditableFields_Only()
     {
@@ -52,7 +52,7 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         }
     }
 
-    // AC-12: an invalid amount (400) or a nonexistent category (404) leaves the stored expense unchanged.
+    // An invalid amount (400) or a nonexistent category (404) leaves the stored expense unchanged.
     [Theory]
     [InlineData(-5, false, HttpStatusCode.BadRequest)]
     [InlineData(12.345, false, HttpStatusCode.BadRequest)]
@@ -69,7 +69,7 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         await AssertUnchangedAsync(original);
     }
 
-    // FR-EXP-004: another user cannot update the expense; it looks like it does not exist.
+    // Another user cannot update the expense; it looks like it does not exist.
     [Fact]
     public async Task Update_OtherUsersExpense_Returns404_AndChangesNothing()
     {
@@ -82,7 +82,7 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         await AssertUnchangedAsync(original);
     }
 
-    // AC-13 / FR-EXP-005: only the targeted expense is deleted.
+    // Only the targeted expense is deleted.
     [Fact]
     public async Task Delete_Owned_Returns204_AndDeletesOnlyThatExpense()
     {
@@ -102,7 +102,7 @@ public sealed class UpdateAndDeleteExpenseTests(TestDatabaseFixture database) : 
         Assert.Equal(10, await db.Categories.CountAsync());
     }
 
-    // AC-14: an unknown id, or another user's expense → 404, and nothing is deleted.
+    // An unknown id, or another user's expense → 404, and nothing is deleted.
     [Fact]
     public async Task Delete_UnknownOrOtherUsers_Returns404_AndDeletesNothing()
     {
