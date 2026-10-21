@@ -28,7 +28,7 @@ public sealed class SummaryService(AppDbContext db, ICurrentUser currentUser) : 
             .Select(g => new { CategoryId = g.Key, Total = g.Sum(e => e.Amount) })
             .ToListAsync(cancellationToken);
 
-        // A user has few fixed expenses, so their payments are calculated in memory.
+        // Fixed expenses are calculated in memory.
         var fixedExpenses = await db.FixedExpenses
             .AsNoTracking()
             .Where(f => f.UserId == userId && f.StartDate <= weekEnd)

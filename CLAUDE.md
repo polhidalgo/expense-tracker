@@ -9,7 +9,7 @@ recurring payments and AI-powered receipt extraction.
 - Backend: ASP.NET Core 10 / C#
 - Frontend: React + TypeScript / Vite
 - Database: Supabase PostgreSQL
-- ORM: Entity Framework Core 10 / Npgsql
+- ORM: Entity Framework Core 10 
 - AI Integration: Groq API
 - Testing: xUnit
 - Version Control: GitHub

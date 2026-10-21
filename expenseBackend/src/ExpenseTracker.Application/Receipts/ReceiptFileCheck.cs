@@ -8,7 +8,7 @@ public static class ReceiptFileCheck
     // Groq accepts at most 4 MB per request, and base64 makes the image about a third bigger.
     public const int MaxBytes = 3 * 1024 * 1024;
 
-    // Returns the image type, detected from the first bytes of the file, not from what the client says.
+    // Returns the image type, detected from the first bytes of the file
     public static string GetImageType(byte[] file)
     {
         if (file.Length > MaxBytes)
