@@ -1,10 +1,20 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { createExpense, deleteExpense, errorMessage, getCategories, listExpenses, updateExpense } from "../api";
+import Alert from "../components/Alert";
 import ConfirmDialog from "../components/ConfirmDialog";
+import EmptyState from "../components/EmptyState";
 import ExpenseFilters, { type Filters } from "../components/ExpenseFilters";
 import ExpenseForm from "../components/ExpenseForm";
-import { formatCurrency } from "../format";
+import Sheet from "../components/Sheet";
+import { TableSkeleton } from "../components/Skeleton";
+import { categoryColor } from "../categoryColors";
+import { formatCurrency, formatDate } from "../format";
+import RowMenu from "../components/RowMenu";
+import { ChevronLeftIcon, ChevronRightIcon } from "../icons";
+import { useToast } from "../toast";
 import type { Category, Expense, ExpenseListQuery, PagedResult } from "../types";
+import { usePageTitle } from "../usePageTitle";
 
 const PAGE_SIZE = 20;
 
@@ -14,10 +24,21 @@ type Result = {
   error?: string;
 };
 
+// The merchant, else the description, else "Untitled".
+const primaryText = (e: Expense) => e.merchant ?? e.description ?? "Untitled";
+
 function ExpensesPage() {
+  usePageTitle("Expenses");
+  const showToast = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [filters, setFilters] = useState<Filters>({ startDate: "", endDate: "", categoryId: "" });
-  const [query, setQuery] = useState<ExpenseListQuery>({ page: 1, pageSize: PAGE_SIZE });
+  // Initial filters can come from the URL, e.g. a category row on This week (T19).
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState<Filters>(() => ({
+    startDate: searchParams.get("startDate") ?? "",
+    endDate: searchParams.get("endDate") ?? "",
+    categoryId: searchParams.get("categoryId") ?? "",
+  }));
+  const [query, setQuery] = useState<ExpenseListQuery>(() => ({ ...filters, page: 1, pageSize: PAGE_SIZE }));
   const [result, setResult] = useState<Result>();
   const [editing, setEditing] = useState<Expense | "new" | null>(null);
   const [toDelete, setToDelete] = useState<Expense | null>(null);
@@ -49,6 +70,7 @@ function ExpensesPage() {
   }
 
   function handleSaved() {
+    showToast(editing === "new" ? "Expense added" : "Changes saved");
     setEditing(null);
     setQuery({ ...query });
   }
@@ -60,6 +82,7 @@ function ExpensesPage() {
     setActionError("");
     try {
       await deleteExpense(expense.id);
+      showToast("Expense deleted");
       const lastOnPage = data?.items.length === 1 && (query.page ?? 1) > 1;
       setQuery({ ...query, page: lastOnPage ? (query.page ?? 1) - 1 : query.page });
     } catch (error) {
@@ -67,130 +90,200 @@ function ExpensesPage() {
     }
   }
 
+  // The previous result stays on screen (dimmed) until the new one arrives.
   const loading = result?.query !== query;
   const data = result?.data;
+  const filtered = Boolean(filters.startDate || filters.endDate || filters.categoryId);
   const totalPages = data ? Math.max(1, Math.ceil(data.totalCount / data.pageSize)) : 1;
+  const firstItem = data ? (data.page - 1) * data.pageSize + 1 : 0;
+  const lastItem = data ? firstItem + data.items.length - 1 : 0;
 
   return (
     <>
-      <div className="page-title">
-        <h1>Expenses</h1>
-        {editing === null && (
-          <button type="button" onClick={() => setEditing("new")}>
-            New expense
+      <div className="page-header">
+        <div>
+          <h1>Expenses</h1>
+          {data && (
+            <p className="muted">
+              {data.totalCount} {data.totalCount === 1 ? "expense" : "expenses"}
+              {filtered && " · filtered"}
+            </p>
+          )}
+        </div>
+        <div className="actions">
+          <Link className="btn btn--secondary" to="/receipt">
+            Scan receipt
+          </Link>
+          <button
+            className="btn btn--primary"
+            type="button"
+            disabled={editing !== null}
+            onClick={() => setEditing("new")}
+          >
+            Add expense
           </button>
-        )}
+        </div>
       </div>
 
-      {editing === "new" && (
-        <ExpenseForm
-          key="new"
-          title="New expense"
-          categories={categories}
-          onSubmit={createExpense}
-          onSaved={handleSaved}
-          onCancel={() => setEditing(null)}
-        />
-      )}
-
-      {editing !== null && editing !== "new" && (
-        <ExpenseForm
-          key={editing.id}
-          title="Edit expense"
-          categories={categories}
-          initial={{
-            amount: String(editing.amount),
-            currency: editing.currency,
-            expenseDate: editing.expenseDate,
-            categoryId: editing.categoryId,
-            merchant: editing.merchant ?? "",
-            description: editing.description ?? "",
-          }}
-          onSubmit={(body) => updateExpense(editing.id, body)}
-          onSaved={handleSaved}
-          onCancel={() => setEditing(null)}
-        />
+      {editing !== null && (
+        <Sheet
+          label={editing === "new" ? "Add expense" : "Edit expense"}
+          guardChanges
+          onClose={() => setEditing(null)}
+        >
+          {(requestClose) => editing === "new" ? (
+            <ExpenseForm
+              key="new"
+              title="Add expense"
+              submitLabel="Save expense"
+              categories={categories}
+              onSubmit={createExpense}
+              onSaved={handleSaved}
+              onCancel={requestClose}
+            />
+          ) : (
+            <ExpenseForm
+              key={editing.id}
+              title="Edit expense"
+              submitLabel="Save changes"
+              categories={categories}
+              initial={{
+                amount: String(editing.amount),
+                currency: editing.currency,
+                expenseDate: editing.expenseDate,
+                categoryId: editing.categoryId,
+                merchant: editing.merchant ?? "",
+                description: editing.description ?? "",
+              }}
+              onSubmit={(body) => updateExpense(editing.id, body)}
+              onSaved={handleSaved}
+              onCancel={requestClose}
+            />
+          )}
+        </Sheet>
       )}
 
       {toDelete && (
         <ConfirmDialog
-          message={`Delete this expense of ${formatCurrency(toDelete.amount, toDelete.currency)}?`}
+          title="Delete expense?"
+          message={`${primaryText(toDelete)}, ${formatCurrency(toDelete.amount, toDelete.currency)} on ${formatDate(toDelete.expenseDate)}. This can't be undone.`}
           onConfirm={confirmDelete}
           onCancel={() => setToDelete(null)}
         />
       )}
 
-      {actionError && (
-        <p className="error" role="alert">
-          {actionError}
-        </p>
-      )}
-
       <ExpenseFilters filters={filters} categories={categories} onChange={changeFilters} />
 
-      {loading && <p>Loading expenses...</p>}
+      {actionError && <Alert>{actionError}</Alert>}
 
-      {!loading && result?.error && (
-        <p className="error" role="alert">
-          {result.error}
-        </p>
+      {!result && <TableSkeleton />}
+
+      {!loading && result?.error && <Alert>{result.error}</Alert>}
+
+      {data && data.items.length === 0 && !loading && (
+        filtered ? (
+          <EmptyState
+            title="No expenses match these filters"
+            actions={
+              <button
+                className="btn btn--secondary"
+                type="button"
+                onClick={() => changeFilters({ startDate: "", endDate: "", categoryId: "" })}
+              >
+                Clear filters
+              </button>
+            }
+          />
+        ) : (
+          <EmptyState
+            title="No expenses yet"
+            description="Add your first expense or scan a receipt."
+            actions={
+              <>
+                <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}>
+                  Add expense
+                </button>
+                <Link className="btn btn--secondary" to="/receipt">
+                  Scan receipt
+                </Link>
+              </>
+            }
+          />
+        )
       )}
 
-      {!loading && data && data.items.length === 0 && <p>No expenses found.</p>}
-
-      {!loading && data && data.items.length > 0 && (
-        <>
-          <table className="expenses">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Merchant / description</th>
-                <th>Category</th>
-                <th className="amount">Amount</th>
-                <th>Currency</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((e) => (
-                <tr key={e.id}>
-                  <td>{e.expenseDate}</td>
-                  <td>
-                    {e.merchant ?? "—"}
-                    {e.description && <div className="muted">{e.description}</div>}
-                  </td>
-                  <td>{e.categoryName}</td>
-                  <td className="amount">{formatCurrency(e.amount, e.currency)}</td>
-                  <td>{e.currency}</td>
-                  <td className="row-actions">
-                    <button type="button" onClick={() => setEditing(e)}>
-                      Edit
-                    </button>
-                    <button type="button" onClick={() => setToDelete(e)}>
-                      Delete
-                    </button>
-                  </td>
+      {data && data.items.length > 0 && (
+        <div className={loading ? "stack is-refreshing" : "stack"} aria-busy={loading}>
+          <div className="table-wrap">
+            <table className="data-table data-table--expenses">
+              <thead>
+                <tr>
+                  <th className="col-date">Date</th>
+                  <th>Description</th>
+                  <th className="col-category">Category</th>
+                  <th className="amount col-amount">Amount</th>
+                  <th className="col-actions">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.items.map((e) => {
+                  const isEditing = editing !== null && editing !== "new" && editing.id === e.id;
+                  return (
+                    <tr key={e.id} className={isEditing ? "is-editing" : undefined} aria-current={isEditing || undefined}>
+                      <td className="muted c-date">
+                        <time dateTime={e.expenseDate}>{formatDate(e.expenseDate)}</time>
+                      </td>
+                      <td className="c-main">
+                        <div className="cell-primary">{primaryText(e)}</div>
+                        {e.merchant && e.description && (
+                          <div className="cell-secondary" title={e.description}>
+                            {e.description}
+                          </div>
+                        )}
+                      </td>
+                      <td className="c-category">
+                        <span className="swatch" style={{ background: categoryColor(e.categoryId) }} />
+                        {e.categoryName}
+                      </td>
+                      <td className="amount c-amount">{formatCurrency(e.amount, e.currency)}</td>
+                      <td className="c-actions">
+                        <RowMenu label={primaryText(e)} onEdit={() => setEditing(e)} onDelete={() => setToDelete(e)} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
           <div className="pagination">
-            <button type="button" disabled={data.page <= 1} onClick={() => goToPage(data.page - 1)}>
-              Previous
-            </button>
-            <span>
-              Page {data.page} of {totalPages} ({data.totalCount} expenses)
+            <span className="muted num">
+              {firstItem}–{lastItem} of {data.totalCount}
             </span>
-            <button
-              type="button"
-              disabled={data.page >= totalPages}
-              onClick={() => goToPage(data.page + 1)}
-            >
-              Next
-            </button>
+            <div className="actions">
+              <button
+                className="btn btn--secondary btn--sm"
+                type="button"
+                disabled={data.page <= 1}
+                onClick={() => goToPage(data.page - 1)}
+              >
+                <ChevronLeftIcon />
+                Previous
+              </button>
+              <button
+                className="btn btn--secondary btn--sm"
+                type="button"
+                disabled={data.page >= totalPages}
+                onClick={() => goToPage(data.page + 1)}
+              >
+                Next
+                <ChevronRightIcon />
+              </button>
+            </div>
           </div>
-        </>
+        </div>
       )}
     </>
   );

@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
-import DashboardPage from "./pages/DashboardPage";
+import AppShell from "./components/AppShell";
 import ExpensesPage from "./pages/ExpensesPage";
+import HistoryPage from "./pages/HistoryPage";
+import FixedExpensesPage from "./pages/FixedExpensesPage";
 import LoginPage from "./pages/LoginPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import ReceiptPage from "./pages/ReceiptPage";
+import WeekPage from "./pages/WeekPage";
 import { supabase } from "./supabase";
 
 function App() {
@@ -20,40 +24,31 @@ function App() {
     return () => data.subscription.unsubscribe();
   }, []);
 
-  return (
-    <>
-      <header className="app-header">
-        <strong>Expense Tracker</strong>
-        {session && (
-          <nav>
-            <NavLink to="/" end>Dashboard</NavLink>
-            <NavLink to="/expenses">Expenses</NavLink>
-            <NavLink to="/receipt">Receipt</NavLink>
-          </nav>
-        )}
-        {session && (
-          <span className="status">
-            {session.user.email}{" "}
-            <button type="button" onClick={() => supabase.auth.signOut()}>
-              Sign out
-            </button>
-          </span>
-        )}
-      </header>
+  const signOut = () => supabase.auth.signOut();
 
-      <main>
-        {checkingSession ? null : !session ? (
-          <LoginPage />
-        ) : (
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/expenses" element={<ExpensesPage />} />
-            <Route path="/receipt" element={<ReceiptPage />} />
-            <Route path="*" element={<p>Page not found.</p>} />
-          </Routes>
-        )}
-      </main>
-    </>
+  // While the session is checked, show the empty frame instead of a blank page.
+  if (checkingSession) {
+    return (
+      <AppShell email={null} onSignOut={signOut}>
+        {null}
+      </AppShell>
+    );
+  }
+
+  // Signed out, the login view owns the whole page (no shell).
+  if (!session) return <LoginPage />;
+
+  return (
+    <AppShell email={session.user.email ?? ""} onSignOut={signOut}>
+      <Routes>
+        <Route path="/" element={<WeekPage />} />
+        <Route path="/history" element={<HistoryPage />} />
+        <Route path="/expenses" element={<ExpensesPage />} />
+        <Route path="/fixed" element={<FixedExpensesPage />} />
+        <Route path="/receipt" element={<ReceiptPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AppShell>
   );
 }
 

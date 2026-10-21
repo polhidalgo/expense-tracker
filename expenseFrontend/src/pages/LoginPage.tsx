@@ -1,11 +1,18 @@
 import { useState, type FormEvent } from "react";
+import { takeSessionExpiredMessage } from "../api";
+import Alert from "../components/Alert";
+import Field from "../components/Field";
 import { supabase } from "../supabase";
+import { usePageTitle } from "../usePageTitle";
 
 function LoginPage() {
+  usePageTitle("Sign in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [signingIn, setSigningIn] = useState(false);
+  // Shown once after the API answered 401.
+  const [expiredMessage] = useState(takeSessionExpiredMessage);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -17,37 +24,42 @@ function LoginPage() {
   }
 
   return (
-    <form className="expense-form" onSubmit={handleSubmit}>
-      <h2>Sign in</h2>
+    <div className="auth">
+      <h1>Expense Tracker</h1>
+      <p className="muted">Sign in to your account.</p>
 
-      <label>
-        Email
-        <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      </label>
+      {expiredMessage && !error && <Alert tone="info">{expiredMessage}</Alert>}
 
-      <label>
-        Password
-        <input
-          type="password"
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </label>
+      <form className="stack" onSubmit={handleSubmit}>
+        <Field id="login-email" label="Email">
+          <input
+            id="login-email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </Field>
 
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+        <Field id="login-password" label="Password">
+          <input
+            id="login-password"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Field>
 
-      <div className="actions">
-        <button type="submit" disabled={signingIn}>
-          {signingIn ? "Signing in..." : "Sign in"}
+        {error && <Alert>{error}</Alert>}
+
+        <button className="btn btn--primary auth__submit" type="submit" disabled={signingIn}>
+          {signingIn ? "Signing in…" : "Sign in"}
         </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }
 

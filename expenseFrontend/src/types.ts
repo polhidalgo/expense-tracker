@@ -42,12 +42,49 @@ export type PagedResult<T> = {
 
 export type FieldErrors = Record<string, string[]>;
 
-export type DashboardSummary = {
+export type Budget = {
+  weeklyAmount: number | null;
+};
+
+export type WeekSummary = {
+  weekStart: string;
+  weekEnd: string;
+  weeklyBudget: number | null;
+  spent: number;
+  remaining: number | null;
+  percentLeft: number | null;
+  byCategory: { categoryId: string; categoryName: string; total: number }[];
+  fixedPayments: { fixedExpenseId: string; name: string; categoryName: string; date: string; amount: number }[];
+};
+
+export type MonthSummary = {
+  month: string;
+  monthlyBudget: number | null;
+  spent: number;
+  difference: number | null;
+  status: "Green" | "Red" | null;
+};
+
+export type FixedFrequency = "Weekly" | "Fortnightly" | "Monthly";
+
+export type FixedExpense = {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  amount: number;
+  currency: string;
   startDate: string;
-  endDate: string;
-  totals: { currency: string; total: number; count: number }[];
-  byCategory: { categoryId: string; categoryName: string; currency: string; total: number }[];
-  recent: Expense[];
+  frequency: FixedFrequency;
+  createdAt: string;
+};
+
+export type FixedExpenseRequest = {
+  name: string;
+  amount: number;
+  categoryId: string;
+  startDate: string;
+  frequency: FixedFrequency;
 };
 
 export type ReceiptDraft = {

@@ -15,8 +15,16 @@ public sealed class AuthenticationTests(TestDatabaseFixture database) : Integrat
     [InlineData("GET", "/api/expenses")]
     [InlineData("POST", "/api/expenses")]
     [InlineData("GET", "/api/categories")]
-    [InlineData("GET", "/api/dashboard/summary?startDate=2026-10-01&endDate=2026-10-31")]
+    [InlineData("GET", "/api/summary/week?date=2026-10-14")]
+    [InlineData("GET", "/api/summary/months?endMonth=2026-10")]
     [InlineData("POST", "/api/receipts/analyze")]
+    [InlineData("GET", "/api/budget")]
+    [InlineData("PUT", "/api/budget")]
+    [InlineData("DELETE", "/api/budget")]
+    [InlineData("GET", "/api/fixed-expenses")]
+    [InlineData("POST", "/api/fixed-expenses")]
+    [InlineData("PUT", "/api/fixed-expenses/00000000-0000-0000-0000-000000000001")]
+    [InlineData("DELETE", "/api/fixed-expenses/00000000-0000-0000-0000-000000000001")]
     public async Task PrivateEndpoint_WithoutUser_Returns401(string method, string path)
     {
         using var client = Factory.CreateClient();
@@ -64,7 +72,7 @@ public sealed class AuthenticationTests(TestDatabaseFixture database) : Integrat
                 SELECT c.relname AS "Value"
                 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                 WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity
-                  AND c.relname IN ('Expenses', 'Categories', 'AppSecrets', '__EFMigrationsHistory')
+                  AND c.relname IN ('Expenses', 'Categories', 'AppSecrets', 'Budgets', 'FixedExpenses', '__EFMigrationsHistory')
                 """)
             .ToListAsync();
 
