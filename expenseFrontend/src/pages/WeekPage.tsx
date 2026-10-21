@@ -149,6 +149,7 @@ function WeekPage() {
                 <h2>Spending by category</h2>
                 <CategoryDonut
                   byCategory={summary.byCategory}
+                  fixedPayments={summary.fixedPayments}
                   spent={summary.spent}
                   weekStart={summary.weekStart}
                   weekEnd={summary.weekEnd}

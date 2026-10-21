@@ -11,7 +11,7 @@ namespace ExpenseTracker.IntegrationTests.Summary;
 [Collection(DatabaseCollection.Name)]
 public sealed class MonthsSummaryTests(TestDatabaseFixture database) : IntegrationTestBase(database)
 {
-    // 12 months ending at endMonth, current month included.
+    // 12 months ending at endMonth, current month included, oldest first.
     [Fact]
     public async Task Months_ReturnsTheTwelveMonthsEndingAtEndMonth()
     {
@@ -20,10 +20,10 @@ public sealed class MonthsSummaryTests(TestDatabaseFixture database) : Integrati
         Assert.Equal(
             ["2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04",
              "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10"],
-            months.Select(m => m.Month).Order());
+            months.Select(m => m.Month));
     }
 
-    // Weekly 70 → October 310.00 and September 300.00 (D-25).
+    // Weekly 70 → October 310.00 and September 300.00.
     // Spent = budget is Green; one cent over is Red. Other users' data is excluded.
     [Fact]
     public async Task Months_GreenAtBudget_RedOneCentOver()
@@ -51,10 +51,12 @@ public sealed class MonthsSummaryTests(TestDatabaseFixture database) : Integrati
         Assert.Equal(-0.01m, september.Difference);
         Assert.Equal("Red", september.Status);
 
-        // A month with nothing spent is within the budget.
+        // A month with nothing spent keeps its budget but has no difference or colour.
         var august = Month(months, "2026-08");
+        Assert.Equal(310.00m, august.MonthlyBudget);
         Assert.Equal(0m, august.Spent);
-        Assert.Equal("Green", august.Status);
+        Assert.Null(august.Difference);
+        Assert.Null(august.Status);
     }
 
     // A monthly fixed expense counts once per month; a weekly one 4 or 5 times.

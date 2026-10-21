@@ -74,8 +74,99 @@ Authorization: Bearer {{token}}
 
 ###
 
-GET {{ExpenseTracker.Api_HostAddress}}/api/dashboard/summary?startDate=2026-10-01&endDate=2026-10-31
+GET {{ExpenseTracker.Api_HostAddress}}/api/budget
 Authorization: Bearer {{token}}
 Accept: application/json
+
+###
+
+PUT {{ExpenseTracker.Api_HostAddress}}/api/budget
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "weeklyAmount": 300.00
+}
+
+###
+
+DELETE {{ExpenseTracker.Api_HostAddress}}/api/budget
+Authorization: Bearer {{token}}
+
+###
+
+GET {{ExpenseTracker.Api_HostAddress}}/api/fixed-expenses
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+POST {{ExpenseTracker.Api_HostAddress}}/api/fixed-expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Rent",
+  "amount": 450.00,
+  "currency": "AUD",
+  "categoryId": "00000000-0000-0000-0000-000000000104",
+  "startDate": "2026-10-01",
+  "frequency": "Weekly"
+}
+
+###
+
+# Replace the id with one returned by the POST above.
+PUT {{ExpenseTracker.Api_HostAddress}}/api/fixed-expenses/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Rent",
+  "amount": 480.00,
+  "currency": "AUD",
+  "categoryId": "00000000-0000-0000-0000-000000000104",
+  "startDate": "2026-10-01",
+  "frequency": "Fortnightly"
+}
+
+###
+
+# Replace the id with one returned by the POST above.
+DELETE {{ExpenseTracker.Api_HostAddress}}/api/fixed-expenses/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+###
+
+# The Monday–Sunday week that contains the date.
+GET {{ExpenseTracker.Api_HostAddress}}/api/summary/week?date=2026-10-21
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+# The 12 months ending at endMonth.
+GET {{ExpenseTracker.Api_HostAddress}}/api/summary/months?endMonth=2026-10
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+# Reads a JPEG, PNG or WebP image (max 3 MB) and returns a draft. Nothing is saved.
+# Uses the local test image, which is kept out of git; any other image path works too.
+POST {{ExpenseTracker.Api_HostAddress}}/api/receipts/analyze
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: multipart/form-data; boundary=receipt
+
+--receipt
+Content-Disposition: form-data; name="file"; filename="receipt.png"
+Content-Type: image/png
+
+< ../../tests/ExpenseTracker.IntegrationTests/TestFiles/receipt.png
+--receipt--
 
 ###

@@ -47,7 +47,7 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                 table: "FixedExpenses",
                 column: "UserId");
 
-            // Closes the table to Supabase's Data API, like the other tables (D-20).
+            // Closes the table to Supabase's Data API, like the other tables.
             migrationBuilder.Sql("ALTER TABLE \"FixedExpenses\" ENABLE ROW LEVEL SECURITY;");
         }
 

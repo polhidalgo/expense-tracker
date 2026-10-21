@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ExpenseTracker.Infrastructure.Services;
 
-// All amounts are AUD (D-02), so totals are not grouped by currency.
+// All amounts are AUD, so totals are not grouped by currency.
 public sealed class SummaryService(AppDbContext db, ICurrentUser currentUser) : ISummaryService
 {
     public async Task<WeekSummaryDto> GetWeekAsync(DateOnly? date, CancellationToken cancellationToken = default)
@@ -117,9 +117,12 @@ public sealed class SummaryService(AppDbContext db, ICurrentUser currentUser) : 
                 ? Budget.MonthlyAmount(weekly, month.Year, month.Month)
                 : null;
 
-            string? status = monthlyBudget is null ? null : spent <= monthlyBudget ? "Green" : "Red";
+            // A month with nothing spent was not tracked, so it gets no colour and no difference.
+            var compared = monthlyBudget is not null && spent > 0;
+            decimal? difference = compared ? monthlyBudget - spent : null;
+            string? status = !compared ? null : spent <= monthlyBudget ? "Green" : "Red";
 
-            months.Add(new MonthSummaryDto(month.ToString("yyyy-MM", CultureInfo.InvariantCulture), monthlyBudget, spent, monthlyBudget - spent, status));
+            months.Add(new MonthSummaryDto(month.ToString("yyyy-MM", CultureInfo.InvariantCulture), monthlyBudget, spent, difference, status));
         }
 
         return months;

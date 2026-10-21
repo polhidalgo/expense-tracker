@@ -59,7 +59,7 @@ const dayNumber = (iso: string) => {
 
 const fromDayNumber = (n: number) => new Date(n * 86_400_000).toISOString().slice(0, 10);
 
-// The same day in a later month, or that month's last day (D-23).
+// The same day in a later month, or that month's last day.
 function monthlyDate(startIso: string, monthsLater: number): string {
   const [y, m, d] = startIso.split("-").map(Number);
   const lastDay = new Date(Date.UTC(y, m - 1 + monthsLater + 1, 0)).getUTCDate();

@@ -1,4 +1,4 @@
-// One fixed colour per category id (FR-CAT-002), so colours never shift.
+// One fixed colour per category id, so colours never shift.
 // The values are CSS custom properties from styles/tokens.css, so they follow the theme.
 const CATEGORY_COLORS: Record<string, string> = {
   "00000000-0000-0000-0000-000000000101": "var(--cat-groceries)",

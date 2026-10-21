@@ -2,7 +2,7 @@ using ExpenseTracker.Domain.Rules;
 
 namespace ExpenseTracker.Domain.Entities;
 
-// One weekly budget per user, applied to every week and month (D-24).
+// One weekly budget per user, applied to every week and month.
 public class Budget
 {
     public Guid UserId { get; private set; }
@@ -39,7 +39,7 @@ public class Budget
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
-    // Weekly ÷ 7 × days in the month, rounded to cents (D-25).
+    // Weekly ÷ 7 × days in the month, rounded to cents.
     public static decimal MonthlyAmount(decimal weeklyAmount, int year, int month) =>
         decimal.Round(weeklyAmount * DateTime.DaysInMonth(year, month) / 7, 2, MidpointRounding.AwayFromZero);
 }

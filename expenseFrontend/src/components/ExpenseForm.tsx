@@ -112,27 +112,34 @@ function ExpenseForm({
   const helper = (name: keyof ExpenseFormValues) =>
     notDetected.includes(name) && !touched.includes(name) ? "Not detected — enter manually" : undefined;
 
-  // Props shared by every control: id, invalid state and the message it is described by.
-  const control = (name: keyof ExpenseFormValues) => {
-    const hasMessage = Boolean(errorOf(name) || helper(name));
+  // Props shared by every control: id, invalid state, the message it is described by and its classes.
+  // extraHelper is a field's own helper (counter, "Only AUD"), shown when there is no other message.
+  const control = (name: keyof ExpenseFormValues, extraHelper?: string, extraClass?: string) => {
+    const hasMessage = Boolean(errorOf(name) || helper(name) || extraHelper);
+    const classes = [isSuggested(name) ? "is-suggested" : "", extraClass ?? ""].filter(Boolean).join(" ");
     return {
       id: `${id}-${name}`,
       "aria-invalid": Boolean(errorOf(name)),
       "aria-describedby": hasMessage ? `${id}-${name}-msg` : undefined,
-      className: isSuggested(name) ? "is-suggested" : undefined,
+      className: classes || undefined,
     };
   };
 
-  const fieldProps = (name: keyof ExpenseFormValues) => ({
+  // "Not detected" wins over the field's own helper.
+  const fieldProps = (name: keyof ExpenseFormValues, extraHelper?: string) => ({
     id: `${id}-${name}`,
     chip: chip(name),
     error: errorOf(name),
-    helper: helper(name),
-    helperTone: "ai" as const,
+    helper: helper(name) ?? extraHelper,
+    helperTone: helper(name) ? ("ai" as const) : ("muted" as const),
   });
 
-  // Only AUD is accepted (D-02): read-only unless an AI draft brought another code to correct.
+  const descriptionCounter =
+    values.description.length > DESCRIPTION_COUNTER_FROM ? `${values.description.length} / ${DESCRIPTION_MAX}` : undefined;
+
+  // Only AUD is accepted: read-only unless an AI draft brought another code to correct.
   const currencyReadOnly = values.currency === "AUD";
+  const currencyHelper = currencyReadOnly ? "Only AUD is supported." : undefined;
 
   return (
     <form className="form" onSubmit={handleSubmit}>
@@ -179,19 +186,9 @@ function ExpenseForm({
           <input {...control("merchant")} value={values.merchant} onChange={(e) => set("merchant", e.target.value)} />
         </Field>
 
-        <Field
-          label="Description"
-          optional
-          {...fieldProps("description")}
-          helper={
-            values.description.length > DESCRIPTION_COUNTER_FROM
-              ? `${values.description.length} / ${DESCRIPTION_MAX}`
-              : undefined
-          }
-          helperTone="muted"
-        >
+        <Field label="Description" optional {...fieldProps("description", descriptionCounter)}>
           <textarea
-            {...control("description")}
+            {...control("description", descriptionCounter)}
             rows={3}
             maxLength={DESCRIPTION_MAX}
             value={values.description}
@@ -199,15 +196,9 @@ function ExpenseForm({
           />
         </Field>
 
-        <Field
-          label="Currency"
-          {...fieldProps("currency")}
-          helper={currencyReadOnly ? "Only AUD is supported." : undefined}
-          helperTone="muted"
-        >
+        <Field label="Currency" {...fieldProps("currency", currencyHelper)}>
           <input
-            {...control("currency")}
-            className="mono"
+            {...control("currency", currencyHelper, "mono")}
             maxLength={3}
             readOnly={currencyReadOnly}
             value={values.currency}

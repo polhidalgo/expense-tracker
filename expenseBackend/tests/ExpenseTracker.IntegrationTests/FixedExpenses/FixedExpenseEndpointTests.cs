@@ -141,6 +141,25 @@ public sealed class FixedExpenseEndpointTests(TestDatabaseFixture database) : In
         Assert.Equal(0, await CountAsync(db => db.FixedExpenses));
     }
 
+    // An invalid change keeps the fixed expense as it was.
+    [Theory]
+    [InlineData("", 500, "Monthly")]
+    [InlineData("Changed", 0, "Monthly")]
+    [InlineData("Changed", 500, "Daily")]
+    public async Task Update_Invalid_Returns400_AndChangesNothing(string name, decimal amount, string frequency)
+    {
+        using var client = Factory.CreateClientFor(TestUsers.UserA);
+        var created = await client.PostAsJsonAsync("/api/fixed-expenses", Request());
+        var fixedExpense = await created.Content.ReadFromJsonAsync<FixedExpenseResponse>();
+
+        var response = await client.PutAsJsonAsync($"/api/fixed-expenses/{fixedExpense!.Id}",
+            Request(name, amount, frequency: frequency));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var stored = Assert.Single((await client.GetFromJsonAsync<List<FixedExpenseResponse>>("/api/fixed-expenses"))!);
+        Assert.Equal(fixedExpense, stored);
+    }
+
     private async Task<int> CountAsync<T>(Func<AppDbContext, IQueryable<T>> table)
     {
         using var scope = Factory.Services.CreateScope();

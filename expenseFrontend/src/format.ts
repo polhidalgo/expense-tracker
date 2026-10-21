@@ -20,7 +20,7 @@ export function addDays(isoDate: string, days: number): string {
   return toIsoDate(date);
 }
 
-// The Monday of the Monday–Sunday week that contains the date (D-22).
+// The Monday of the Monday–Sunday week that contains the date.
 export function mondayOf(isoDate: string): string {
   const daysSinceMonday = (fromIsoDate(isoDate).getDay() + 6) % 7;
   return addDays(isoDate, -daysSinceMonday);

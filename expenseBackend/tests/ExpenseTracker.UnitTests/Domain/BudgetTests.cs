@@ -1,3 +1,4 @@
+using System.Globalization;
 using ExpenseTracker.Domain.Entities;
 using ExpenseTracker.Domain.Rules;
 
@@ -24,7 +25,7 @@ public class BudgetTests
     [InlineData("10000000000000000")]
     public void Create_WithInvalidAmount_IsRejected(string amount)
     {
-        var ex = Assert.Throws<DomainValidationException>(() => new Budget(Guid.NewGuid(), decimal.Parse(amount)));
+        var ex = Assert.Throws<DomainValidationException>(() => new Budget(Guid.NewGuid(), decimal.Parse(amount, CultureInfo.InvariantCulture)));
 
         Assert.Equal(["weeklyAmount"], ex.Errors.Keys);
     }
@@ -46,6 +47,6 @@ public class BudgetTests
     [InlineData("100", 2026, 4, "428.57")]
     public void MonthlyAmount_IsWeeklyPerDayTimesDaysInMonth(string weekly, int year, int month, string expected)
     {
-        Assert.Equal(decimal.Parse(expected), Budget.MonthlyAmount(decimal.Parse(weekly), year, month));
+        Assert.Equal(decimal.Parse(expected, CultureInfo.InvariantCulture), Budget.MonthlyAmount(decimal.Parse(weekly, CultureInfo.InvariantCulture), year, month));
     }
 }

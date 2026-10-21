@@ -3,7 +3,7 @@ using ExpenseTracker.Domain.Rules;
 
 namespace ExpenseTracker.Domain.Entities;
 
-// A template: its payments are calculated, never saved as expenses (D-23).
+// A template: its payments are calculated, never saved as expenses.
 public class FixedExpense
 {
     public const int MaxNameLength = 150;

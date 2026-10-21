@@ -995,7 +995,7 @@ dialog[open] {
   justify-content: center;
   padding: var(--s-1);
   color: var(--text-h);
-  font-size: 10px;
+  font-size: var(--fs-meta);
   text-align: center;
   background: color-mix(in oklab, var(--surface-sunken) 85%, transparent);
 }
@@ -1262,7 +1262,8 @@ dialog[open] {
 
 /* ---------- Breakdown rows link to Expenses (T19) ---------- */
 
-.breakdown__name a {
+.breakdown__name a,
+.breakdown__label {
   display: inline-flex;
   align-items: center;
   color: var(--text);

@@ -25,7 +25,7 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                     table.CheckConstraint("CK_Budgets_WeeklyAmount_Positive", "\"WeeklyAmount\" > 0");
                 });
 
-            // Closes the table to Supabase's Data API, like the other tables (D-20).
+            // Closes the table to Supabase's Data API, like the other tables.
             migrationBuilder.Sql("ALTER TABLE \"Budgets\" ENABLE ROW LEVEL SECURITY;");
         }
 

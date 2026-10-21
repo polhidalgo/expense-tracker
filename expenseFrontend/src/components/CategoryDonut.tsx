@@ -6,6 +6,7 @@ import type { WeekSummary } from "../types";
 
 type Props = {
   byCategory: WeekSummary["byCategory"];
+  fixedPayments: WeekSummary["fixedPayments"];
   spent: number;
   // The week shown, so each row can open Expenses filtered to it (T19).
   weekStart: string;
@@ -32,8 +33,17 @@ const tooltipStyle = {
 
 // Donut by category (§C.13), with a ranked breakdown list that shows every figure as text.
 // Donut and list share the order (amount, descending) and the fixed category colours.
-function CategoryDonut({ byCategory, spent, weekStart, weekEnd }: Props) {
+function CategoryDonut({ byCategory, fixedPayments, spent, weekStart, weekEnd }: Props) {
   const rows = [...byCategory].sort((a, b) => b.total - a.total);
+
+  // A category has expenses when its total is more than its fixed payments.
+  // Half a cent of margin absorbs floating-point error in the sum.
+  const hasExpenses = (categoryName: string, total: number) => {
+    const fixedTotal = fixedPayments
+      .filter((p) => p.categoryName === categoryName)
+      .reduce((sum, p) => sum + p.amount, 0);
+    return total - fixedTotal > 0.005;
+  };
   const largest = rows[0];
   const label = largest
     ? `Spent ${aud(spent)}; largest category ${largest.categoryName}, ${share(largest.total, spent)}`
@@ -78,13 +88,20 @@ function CategoryDonut({ byCategory, spent, weekStart, weekEnd }: Props) {
           {rows.map((c) => (
             <tr key={c.categoryId}>
               <td className="breakdown__name">
-                {/* Expenses only: fixed payments are not expense rows (D-23). */}
-                <Link
-                  to={`/expenses?${new URLSearchParams({ categoryId: c.categoryId, startDate: weekStart, endDate: weekEnd })}`}
-                >
-                  <span className="swatch" style={{ background: categoryColor(c.categoryId) }} />
-                  {c.categoryName}
-                </Link>
+                {/* Expenses only lists expense rows, so a category with only fixed payments has no link. */}
+                {hasExpenses(c.categoryName, c.total) ? (
+                  <Link
+                    to={`/expenses?${new URLSearchParams({ categoryId: c.categoryId, startDate: weekStart, endDate: weekEnd })}`}
+                  >
+                    <span className="swatch" style={{ background: categoryColor(c.categoryId) }} />
+                    {c.categoryName}
+                  </Link>
+                ) : (
+                  <span className="breakdown__label">
+                    <span className="swatch" style={{ background: categoryColor(c.categoryId) }} />
+                    {c.categoryName}
+                  </span>
+                )}
               </td>
               <td className="breakdown__bar" aria-hidden="true">
                 <span className="breakdown__track">

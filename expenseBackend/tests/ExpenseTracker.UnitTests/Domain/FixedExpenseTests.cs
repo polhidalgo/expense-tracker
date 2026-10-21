@@ -1,3 +1,4 @@
+using System.Globalization;
 using ExpenseTracker.Domain.Entities;
 using ExpenseTracker.Domain.Enums;
 using ExpenseTracker.Domain.Rules;
@@ -68,6 +69,17 @@ public class FixedExpenseTests
         Assert.Equal([D(2028, 2, 29)], payments);
     }
 
+    // A range that starts after this month's due date begins with next month's payment.
+    [Fact]
+    public void PaymentsBetween_MonthlyRangeStartingAfterDueDay_StartsNextMonth()
+    {
+        var fixedExpense = NewFixed(D(2026, 1, 15), FixedFrequency.Monthly);
+
+        var payments = fixedExpense.PaymentsBetween(D(2026, 3, 20), D(2026, 4, 30));
+
+        Assert.Equal([D(2026, 4, 15)], payments);
+    }
+
     [Theory]
     [InlineData(FixedFrequency.Weekly)]
     [InlineData(FixedFrequency.Fortnightly)]
@@ -102,7 +114,7 @@ public class FixedExpenseTests
     [InlineData("12.345")]
     public void Create_WithInvalidAmount_IsRejected(string amount)
     {
-        AssertRejected("amount", () => NewFixed(D(2026, 10, 7), amount: decimal.Parse(amount)));
+        AssertRejected("amount", () => NewFixed(D(2026, 10, 7), amount: decimal.Parse(amount, CultureInfo.InvariantCulture)));
     }
 
     [Fact]

@@ -24,6 +24,16 @@ type Result = {
   error?: string;
 };
 
+const filtersFrom = (params: URLSearchParams): Filters => ({
+  startDate: params.get("startDate") ?? "",
+  endDate: params.get("endDate") ?? "",
+  categoryId: params.get("categoryId") ?? "",
+});
+
+// Only the filters that are set, e.g. "categoryId=…&startDate=…".
+const searchFrom = (filters: Filters) =>
+  new URLSearchParams(Object.entries(filters).filter(([, value]) => value)).toString();
+
 // The merchant, else the description, else "Untitled".
 const primaryText = (e: Expense) => e.merchant ?? e.description ?? "Untitled";
 
@@ -31,14 +41,12 @@ function ExpensesPage() {
   usePageTitle("Expenses");
   const showToast = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
-  // Initial filters can come from the URL, e.g. a category row on This week (T19).
-  const [searchParams] = useSearchParams();
-  const [filters, setFilters] = useState<Filters>(() => ({
-    startDate: searchParams.get("startDate") ?? "",
-    endDate: searchParams.get("endDate") ?? "",
-    categoryId: searchParams.get("categoryId") ?? "",
-  }));
+  // The filters live in the URL, so a category row on This week (T19), reload and the nav link agree.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.toString();
+  const [filters, setFilters] = useState<Filters>(() => filtersFrom(searchParams));
   const [query, setQuery] = useState<ExpenseListQuery>(() => ({ ...filters, page: 1, pageSize: PAGE_SIZE }));
+  const [seenSearch, setSeenSearch] = useState(search);
   const [result, setResult] = useState<Result>();
   const [editing, setEditing] = useState<Expense | "new" | null>(null);
   const [toDelete, setToDelete] = useState<Expense | null>(null);
@@ -60,9 +68,20 @@ function ExpensesPage() {
     };
   }, [query]);
 
-  function changeFilters(next: Filters) {
+  // The URL changed from outside (e.g. the "Expenses" nav link): its filters win, back on page 1.
+  if (search !== seenSearch) {
+    const next = filtersFrom(searchParams);
+    setSeenSearch(search);
     setFilters(next);
     setQuery({ ...next, page: 1, pageSize: PAGE_SIZE });
+  }
+
+  function changeFilters(next: Filters) {
+    const nextSearch = searchFrom(next);
+    setFilters(next);
+    setQuery({ ...next, page: 1, pageSize: PAGE_SIZE });
+    setSeenSearch(nextSearch);
+    setSearchParams(nextSearch, { replace: true });
   }
 
   function goToPage(page: number) {
