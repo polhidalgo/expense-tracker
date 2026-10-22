@@ -40,7 +40,7 @@ public class BudgetTests
         Assert.Equal(100m, budget.WeeklyAmount);
     }
 
-    // Weekly ÷ 7 × days in the month, rounded to cents.
+    // Weekly budget ÷ 7 multiplied by days in the month, should return expected monthly amount
     [Theory]
     [InlineData("70", 2026, 10, "310.00")]
     [InlineData("70", 2026, 2, "280.00")]
