@@ -24,7 +24,7 @@ recurring payments and AI-powered receipt extraction.
 - Follow the existing layered architecture.
 - Domain contains business entities and rules.
 - Application contains use cases and abstractions.
-- Infrastructure handles persistence and external services.
+- Infrastructure handles persistence and services.
 - API handles HTTP endpoints and request validation.
 - Keep controllers thin.
 - Avoid unnecessary abstractions and overengineering.
@@ -41,11 +41,11 @@ recurring payments and AI-powered receipt extraction.
 9. Review the final diff and report any remaining risks.
 
 ## Coding Standards
-- Use async/await for database and HTTP I/O.
+- Use async/await for database and HTTP In and out opertions with external sources.
 - Use decimal for financial calculations.
 - Prefer dependency injection.
 - Follow existing naming conventions.
-- Use strongly typed DTOs.
+- Use strongly typed DTOs for API requests and responses.
 - Handle null values and invalid input explicitly.
 - Do not add packages without justification.
 - Avoid unrelated refactoring.
@@ -61,17 +61,15 @@ recurring payments and AI-powered receipt extraction.
 - Write tests against expected requirements.
 - Cover important edge cases.
 - Do not modify tests simply to make them pass.
-- Mock external AI services in unit tests.
-- Report failing tests honestly.
+- Report failing tests.
 
 ## Security
 - Never commit credentials, tokens or connection strings.
-- Use environment variables or .NET User Secrets.
+- Use environment variables for FrontEnd and .NET User Secrets for the BackEnd.
 - Restrict database access by user.
 - Do not expose sensitive financial information in logs.
 
 ## Documentation
 - Architecture: docs/architecture.md
-- Implementation: docs/implementations/
-- Plans: docs/plans/
+- Implementation: docs/plans/implementations-plan.md
 - Requirements: docs/requirements.md

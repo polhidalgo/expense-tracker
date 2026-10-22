@@ -9,7 +9,7 @@ public class Budget
     public decimal WeeklyAmount { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    // Used by EF
+    // Used by EF, to read the entity from the database.
     private Budget()
     {
     }

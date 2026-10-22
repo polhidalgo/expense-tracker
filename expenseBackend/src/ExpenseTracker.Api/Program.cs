@@ -67,7 +67,7 @@ builder.Services.AddHttpClient<GroqReceiptExtractor>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// Supabase Auth signs the access tokens; the public keys come from the project's discovery document.
+// Supabase Auth signs the access tokens
 var supabaseUrl = builder.Configuration["Supabase:Url"]
     ?? throw new InvalidOperationException(
         "Supabase URL is missing. Set 'Supabase:Url' (e.g. https://<project>.supabase.co).");
@@ -81,7 +81,7 @@ builder.Services
         options.MapInboundClaims = false;
     });
 
-// Every endpoint needs a signed-in user unless it says otherwise.
+// Every endpoint needs a signed user unless it says otherwise.
 builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
